@@ -31,8 +31,9 @@ project uses dbt **cross-database macros** so the same SQL compiles on both.
 - DuckDB's single-writer model has to be respected locally (the `dbt` pool,
   read-only connections) — see [ADR-0005](0005-celery-executor.md) and
   `docs/architecture.md`.
-- The two warehouses differ slightly in SQL; cross-database macros and one
-  Python-computed timestamp literal absorb the difference.
+- The two warehouses differ slightly in SQL; cross-database dbt macros absorb
+  the difference. The quality suite uses `CURRENT_TIMESTAMP - INTERVAL 'N' HOUR`
+  which is portable SQL — no Python-computed literals are injected.
 
 ## Alternatives considered
 

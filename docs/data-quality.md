@@ -66,7 +66,13 @@ becomes a **queryable history**, not a scroll through logs.
 
 ## Why it is portable
 
-Every check is written in SQL common to DuckDB and BigQuery, so the identical
-suite runs locally and in production. The freshness threshold is computed in
-Python and injected as a literal, side-stepping the one place the two
-warehouses differ on timestamp arithmetic.
+Every check is written in SQL that compiles unchanged on DuckDB and BigQuery:
+
+- **Integer comparisons, `IS NULL`, `count(*)`** — identical on both.
+- **`CURRENT_DATE`** — standard SQL, supported by both.
+- **Freshness** — uses `CURRENT_TIMESTAMP - INTERVAL 'N' HOUR`, which both
+  warehouses support natively. The threshold is evaluated *at query-execution
+  time*, so a cached or long-running DAG process never produces a stale result.
+  (An earlier version injected a Python-computed timestamp literal at parse
+  time; this was replaced in the first code review — see
+  [ADR-0007](adr/0007-dag-parse-time-vs-run-time-configuration.md).)

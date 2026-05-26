@@ -225,7 +225,7 @@ pytest -m dags         # DAG-integrity tests (needs Airflow + Cosmos)
 | [docs/production-gcp.md](docs/production-gcp.md) | Deploying against BigQuery |
 | [docs/data-quality.md](docs/data-quality.md) | The quality strategy |
 | [LEARNING_GUIDE.md](LEARNING_GUIDE.md) | Guided tour of every concept, hands-on |
-| [docs/adr/](docs/adr/) | Architecture Decision Records — the *why* |
+| [docs/adr/](docs/adr/) | Architecture Decision Records — the *why* (7 ADRs) |
 
 ---
 
