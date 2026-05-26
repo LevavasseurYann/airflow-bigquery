@@ -1,7 +1,7 @@
 # ============================================================================
 # Docs — build and deploy the MkDocs site to GitHub Pages on every push to
-# main.  Uses the GitHub Pages native deployment API (source: "GitHub Actions"
-# in Settings → Pages).  No gh-pages branch required.
+# main.  mkdocs gh-deploy pushes the built HTML to the gh-pages branch.
+# In Settings → Pages, set Source to: Deploy from a branch → gh-pages / root.
 # ============================================================================
 name: Docs
 
@@ -10,20 +10,12 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Required for GitHub Pages native deployment.
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Only one deployment at a time; cancel in-progress runs.
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  contents: write
 
 jobs:
-  build:
-    name: Build docs
+  deploy:
+    name: Build and deploy docs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,22 +38,5 @@ jobs:
       - name: Install hr_pipeline
         run: pip install -e .
 
-      - name: Build site
-        run: mkdocs build --strict
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site/
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+        run: mkdocs gh-deploy --force
