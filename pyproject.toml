@@ -21,9 +21,9 @@ authors = [{ name = "Yann Levavasseur" }]
 keywords = ["airflow", "dbt", "bigquery", "duckdb", "data-engineering"]
 
 dependencies = [
-    "duckdb>=1.1.0",
+    "duckdb>=1.5.0",
     "pandas>=2.1.0",
-    "pyarrow>=16.0.0",  # Parquet landing zone in the ingestion step
+    "pyarrow>=20.0.0",  # Parquet landing zone in the ingestion step
 ]
 
 [project.optional-dependencies]

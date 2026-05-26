@@ -9,10 +9,10 @@
 
 | Outil | Version | Rôle |
 |---|---|---|
-| Apache Airflow | 3.1 | Orchestrateur (CeleryExecutor) |
-| astronomer-cosmos | latest | Intégration dbt dans Airflow |
-| dbt-core | 1.9+ | Transformations embarquées dans `include/dbt/` |
-| DuckDB | 1.1+ | Warehouse local (défaut, sans cloud) |
+| Apache Airflow | 3.2 | Orchestrateur (CeleryExecutor) |
+| astronomer-cosmos | 1.14+ | Intégration dbt dans Airflow |
+| dbt-core | 1.11+ | Transformations embarquées dans `include/dbt/` |
+| DuckDB | 1.5+ | Warehouse local (défaut, sans cloud) |
 | Google BigQuery | — | Warehouse production (`HR_ENV=production`) |
 | Python | 3.12 | Runtime |
 | Docker Compose | v2 | Runtime local multi-services |

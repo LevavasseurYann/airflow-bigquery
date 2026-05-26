@@ -24,11 +24,11 @@ jobs:
     name: Lint (ruff)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-lint-${{ hashFiles('pyproject.toml') }}
@@ -43,11 +43,11 @@ jobs:
     name: Unit tests (pytest)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-unit-${{ hashFiles('pyproject.toml') }}
@@ -66,17 +66,17 @@ jobs:
       DUCKDB_PATH: ${{ github.workspace }}/include/data/ci_warehouse.duckdb
       DBT_TARGET: dev
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-dbt-${{ hashFiles('pyproject.toml') }}
           restore-keys: ${{ runner.os }}-pip-dbt-
       - name: Install hr_pipeline + dbt
-        run: pip install -e . "dbt-core>=1.9,<2.0" "dbt-duckdb>=1.9,<2.0"
+        run: pip install -e . "dbt-core>=1.11,<2.0" "dbt-duckdb>=1.10,<2.0"
       - name: Seed raw_hr.employees (runs the real ingestion logic)
         run: python scripts/seed_local_warehouse.py
       - name: dbt build — run + test every model, seed, snapshot
@@ -90,27 +90,27 @@ jobs:
     env:
       HR_ENV: local
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      # Airflow 3.1 + Cosmos is the heaviest install (~500 MB). Cache it
+      # Airflow 3.2 + Cosmos is the heaviest install (~500 MB). Cache it
       # keyed on the Airflow version so a version bump busts the cache.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-airflow-3.1.0-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-pip-airflow-3.2.1-${{ hashFiles('requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-airflow-3.1.0-
+            ${{ runner.os }}-pip-airflow-3.2.1-
             ${{ runner.os }}-pip-airflow-
-      - name: Install Apache Airflow 3.1 (with the official constraints)
+      - name: Install Apache Airflow 3.2 (with the official constraints)
         run: |
-          pip install "apache-airflow==3.1.0" \
-            --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-3.1.0/constraints-3.12.txt"
+          pip install "apache-airflow==3.2.1" \
+            --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-3.2.1/constraints-3.12.txt"
       - name: Install Cosmos + the hr_pipeline package
         run: |
-          pip install "dbt-core>=1.9,<2.0" "dbt-duckdb>=1.9,<2.0"
-          pip install "astronomer-cosmos[dbt-duckdb]>=1.8,<2.0"
+          pip install "dbt-core>=1.11,<2.0" "dbt-duckdb>=1.10,<2.0"
+          pip install "astronomer-cosmos[dbt-duckdb]>=1.14,<2.0"
           pip install -e .
       - name: Parse and validate the DAG bag
         run: pytest -m dags -v
