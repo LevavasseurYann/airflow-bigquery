@@ -1054,6 +1054,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#hr_pipeline.quality.checks.QualityReport.passed_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;passed_count
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#hr_pipeline.quality.checks.QualityReport.blocking_failures" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1897,6 +1908,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#hr_pipeline.quality.checks.QualityReport.passed_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;passed_count
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#hr_pipeline.quality.checks.QualityReport.blocking_failures" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2291,7 +2313,11 @@ across both quality layers.</p>
 <span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
 <span class="normal"><a href="#__codelineno-0-100">100</a></span>
 <span class="normal"><a href="#__codelineno-0-101">101</a></span>
-<span class="normal"><a href="#__codelineno-0-102">102</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">class</span><span class="w"> </span><span class="nc">QualityReport</span><span class="p">:</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregated outcome of a whole suite.&quot;&quot;&quot;</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a>
@@ -2303,40 +2329,44 @@ across both quality layers.</p>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">passed</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>
 <a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">blocking_failures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]:</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Failed ERROR-severity checks — these must fail the DAG.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">passed_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of checks that passed.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span><span class="p">)</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="nd">@property</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">warnings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]:</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Failed WARN-severity checks — surfaced but non-blocking.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">WARN</span><span class="p">]</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">blocking_failures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]:</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Failed ERROR-severity checks — these must fail the DAG.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">has_blocking_failures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocking_failures</span><span class="p">)</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;A human-readable one-paragraph summary for logs and alerts.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="n">passed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span><span class="p">)</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>            <span class="sa">f</span><span class="s2">&quot;Data quality: </span><span class="si">{</span><span class="n">passed</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> checks passed.&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a>        <span class="p">]</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a>                    <span class="sa">f</span><span class="s2">&quot;  - [</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: &quot;</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="si">}</span><span class="s2"> failing row(s) — </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a>                <span class="p">)</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="k">return</span> <span class="p">{</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97"></a>            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span><span class="p">,</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98"></a>            <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">),</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99"></a>            <span class="s2">&quot;blocking_failures&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocking_failures</span><span class="p">),</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100"></a>            <span class="s2">&quot;warnings&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">warnings</span><span class="p">),</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101"></a>            <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">],</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102"></a>        <span class="p">}</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="nd">@property</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">warnings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]:</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Failed WARN-severity checks — surfaced but non-blocking.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">WARN</span><span class="p">]</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">has_blocking_failures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocking_failures</span><span class="p">)</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;A human-readable one-paragraph summary for logs and alerts.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>            <span class="sa">f</span><span class="s2">&quot;Data quality: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">passed_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> checks passed.&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="p">]</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>                    <span class="sa">f</span><span class="s2">&quot;  - [</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: &quot;</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="si">}</span><span class="s2"> failing row(s) — </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>                <span class="p">)</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a>        <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a>            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span><span class="p">,</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a>            <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">),</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>            <span class="s2">&quot;blocking_failures&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocking_failures</span><span class="p">),</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a>            <span class="s2">&quot;warnings&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">warnings</span><span class="p">),</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a>            <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">],</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>        <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
@@ -2369,6 +2399,30 @@ across both quality layers.</p>
     <div class="doc doc-contents ">
 
         <p>True when every check passed.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="hr_pipeline.quality.checks.QualityReport.passed_count" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">passed_count</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#hr_pipeline.quality.checks.QualityReport.passed_count" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">passed_count</span><span class="p">:</span> <span class="nb">int</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Number of checks that passed.</p>
 
     </div>
 
@@ -2443,31 +2497,29 @@ across both quality layers.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/hr_pipeline/quality/checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-81">81</a></span>
-<span class="normal"><a href="#__codelineno-0-82">82</a></span>
-<span class="normal"><a href="#__codelineno-0-83">83</a></span>
-<span class="normal"><a href="#__codelineno-0-84">84</a></span>
-<span class="normal"><a href="#__codelineno-0-85">85</a></span>
-<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-86">86</a></span>
 <span class="normal"><a href="#__codelineno-0-87">87</a></span>
 <span class="normal"><a href="#__codelineno-0-88">88</a></span>
 <span class="normal"><a href="#__codelineno-0-89">89</a></span>
 <span class="normal"><a href="#__codelineno-0-90">90</a></span>
 <span class="normal"><a href="#__codelineno-0-91">91</a></span>
 <span class="normal"><a href="#__codelineno-0-92">92</a></span>
-<span class="normal"><a href="#__codelineno-0-93">93</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;A human-readable one-paragraph summary for logs and alerts.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>    <span class="n">passed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span><span class="p">)</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="sa">f</span><span class="s2">&quot;Data quality: </span><span class="si">{</span><span class="n">passed</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> checks passed.&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="p">]</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a>                <span class="sa">f</span><span class="s2">&quot;  - [</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: &quot;</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="si">}</span><span class="s2"> failing row(s) — </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a>            <span class="p">)</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#__codelineno-0-96">96</a></span>
+<span class="normal"><a href="#__codelineno-0-97">97</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-86" name="__codelineno-0-86"></a><span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;A human-readable one-paragraph summary for logs and alerts.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>        <span class="sa">f</span><span class="s2">&quot;Data quality: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">passed_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> checks passed.&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="p">]</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>                <span class="sa">f</span><span class="s2">&quot;  - [</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: &quot;</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="si">}</span><span class="s2"> failing row(s) — </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>            <span class="p">)</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2501,27 +2553,27 @@ across both quality layers.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/hr_pipeline/quality/checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-105">105</a></span>
-<span class="normal"><a href="#__codelineno-0-106">106</a></span>
-<span class="normal"><a href="#__codelineno-0-107">107</a></span>
-<span class="normal"><a href="#__codelineno-0-108">108</a></span>
-<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-109">109</a></span>
 <span class="normal"><a href="#__codelineno-0-110">110</a></span>
 <span class="normal"><a href="#__codelineno-0-111">111</a></span>
 <span class="normal"><a href="#__codelineno-0-112">112</a></span>
 <span class="normal"><a href="#__codelineno-0-113">113</a></span>
 <span class="normal"><a href="#__codelineno-0-114">114</a></span>
-<span class="normal"><a href="#__codelineno-0-115">115</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_check</span><span class="p">(</span><span class="n">warehouse</span><span class="p">:</span> <span class="n">Warehouse</span><span class="p">,</span> <span class="n">check</span><span class="p">:</span> <span class="n">QualityCheck</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CheckResult</span><span class="p">:</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute one check against the warehouse.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107"></a>    <span class="n">raw</span> <span class="o">=</span> <span class="n">warehouse</span><span class="o">.</span><span class="n">fetch_scalar</span><span class="p">(</span><span class="n">check</span><span class="o">.</span><span class="n">sql</span><span class="p">)</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108"></a>    <span class="n">failing_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109"></a>    <span class="k">return</span> <span class="n">CheckResult</span><span class="p">(</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="n">name</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111"></a>        <span class="n">description</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112"></a>        <span class="n">severity</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113"></a>        <span class="n">failing_rows</span><span class="o">=</span><span class="n">failing_rows</span><span class="p">,</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114"></a>        <span class="n">passed</span><span class="o">=</span><span class="n">failing_rows</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115"></a>    <span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_check</span><span class="p">(</span><span class="n">warehouse</span><span class="p">:</span> <span class="n">Warehouse</span><span class="p">,</span> <span class="n">check</span><span class="p">:</span> <span class="n">QualityCheck</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CheckResult</span><span class="p">:</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute one check against the warehouse.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>    <span class="n">raw</span> <span class="o">=</span> <span class="n">warehouse</span><span class="o">.</span><span class="n">fetch_scalar</span><span class="p">(</span><span class="n">check</span><span class="o">.</span><span class="n">sql</span><span class="p">)</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>    <span class="n">failing_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>    <span class="k">return</span> <span class="n">CheckResult</span><span class="p">(</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a>        <span class="n">name</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a>        <span class="n">description</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>        <span class="n">severity</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a>        <span class="n">failing_rows</span><span class="o">=</span><span class="n">failing_rows</span><span class="p">,</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a>        <span class="n">passed</span><span class="o">=</span><span class="n">failing_rows</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>    <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
@@ -2547,11 +2599,7 @@ across both quality layers.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>src/hr_pipeline/quality/checks.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-118">118</a></span>
-<span class="normal"><a href="#__codelineno-0-119">119</a></span>
-<span class="normal"><a href="#__codelineno-0-120">120</a></span>
-<span class="normal"><a href="#__codelineno-0-121">121</a></span>
-<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-122">122</a></span>
 <span class="normal"><a href="#__codelineno-0-123">123</a></span>
 <span class="normal"><a href="#__codelineno-0-124">124</a></span>
 <span class="normal"><a href="#__codelineno-0-125">125</a></span>
@@ -2559,19 +2607,23 @@ across both quality layers.</p>
 <span class="normal"><a href="#__codelineno-0-127">127</a></span>
 <span class="normal"><a href="#__codelineno-0-128">128</a></span>
 <span class="normal"><a href="#__codelineno-0-129">129</a></span>
-<span class="normal"><a href="#__codelineno-0-130">130</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-118" name="__codelineno-0-118"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_suite</span><span class="p">(</span><span class="n">warehouse</span><span class="p">:</span> <span class="n">Warehouse</span><span class="p">,</span> <span class="n">checks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QualityCheck</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">QualityReport</span><span class="p">:</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute every check and return an aggregated :class:`QualityReport`.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120"></a>    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-121" name="__codelineno-0-121"></a>    <span class="k">for</span> <span class="n">check</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">:</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">run_check</span><span class="p">(</span><span class="n">warehouse</span><span class="p">,</span> <span class="n">check</span><span class="p">)</span>
-<a id="__codelineno-0-123" name="__codelineno-0-123"></a>        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PASS  </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125"></a>        <span class="k">elif</span> <span class="n">check</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
-<a id="__codelineno-0-126" name="__codelineno-0-126"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;FAIL  </span><span class="si">%s</span><span class="s2"> — </span><span class="si">%s</span><span class="s2"> failing row(s)&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="p">)</span>
-<a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;WARN  </span><span class="si">%s</span><span class="s2"> — </span><span class="si">%s</span><span class="s2"> failing row(s)&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="p">)</span>
-<a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130"></a>    <span class="k">return</span> <span class="n">QualityReport</span><span class="p">(</span><span class="n">results</span><span class="o">=</span><span class="n">results</span><span class="p">)</span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#__codelineno-0-134">134</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-122" name="__codelineno-0-122"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_suite</span><span class="p">(</span><span class="n">warehouse</span><span class="p">:</span> <span class="n">Warehouse</span><span class="p">,</span> <span class="n">checks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QualityCheck</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">QualityReport</span><span class="p">:</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute every check and return an aggregated :class:`QualityReport`.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a>    <span class="k">for</span> <span class="n">check</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">:</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">run_check</span><span class="p">(</span><span class="n">warehouse</span><span class="p">,</span> <span class="n">check</span><span class="p">)</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a>        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PASS  </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>        <span class="k">elif</span> <span class="n">check</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;FAIL  </span><span class="si">%s</span><span class="s2"> — </span><span class="si">%s</span><span class="s2"> failing row(s)&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="p">)</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;WARN  </span><span class="si">%s</span><span class="s2"> — </span><span class="si">%s</span><span class="s2"> failing row(s)&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="p">)</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>    <span class="k">return</span> <span class="n">QualityReport</span><span class="p">(</span><span class="n">results</span><span class="o">=</span><span class="n">results</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

@@ -2789,9 +2789,9 @@ needs the dependency installed, nor any GCP credentials, to run.</p>
 <a id="__codelineno-0-203" name="__codelineno-0-203"></a>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a>        <span class="k">try</span><span class="p">:</span>
 <a id="__codelineno-0-205" name="__codelineno-0-205"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_project</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">schema</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206"></a>        <span class="k">except</span> <span class="n">NotFound</span><span class="p">:</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207"></a>            <span class="k">return</span> <span class="kc">False</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208"></a>        <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206"></a>            <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207"></a>        <span class="k">except</span> <span class="n">NotFound</span><span class="p">:</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208"></a>            <span class="k">return</span> <span class="kc">False</span>
 <a id="__codelineno-0-209" name="__codelineno-0-209"></a>
 <a id="__codelineno-0-210" name="__codelineno-0-210"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-211" name="__codelineno-0-211"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
