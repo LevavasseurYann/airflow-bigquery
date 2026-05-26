@@ -148,7 +148,8 @@ services:
 
   airflow-worker:
     <<: *airflow-common
-    command: celery worker
+    command: celery worker --celery-hostname=celery@%h
+    hostname: worker
     healthcheck:
       test:
         - "CMD-SHELL"
