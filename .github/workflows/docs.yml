@@ -8,6 +8,7 @@ name: Docs
 on:
   push:
     branches: [main]
+  workflow_dispatch:  # permet le déclenchement manuel depuis l'onglet Actions
 
 # Required so mkdocs gh-deploy can push to the gh-pages branch.
 permissions:
