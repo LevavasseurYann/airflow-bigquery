@@ -46,9 +46,6 @@ jobs:
       - name: Install hr_pipeline
         run: pip install -e .
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
       - name: Build site
         run: mkdocs build --strict
 
