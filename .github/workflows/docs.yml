@@ -1,0 +1,45 @@
+# ============================================================================
+# Docs — build and deploy the MkDocs site to GitHub Pages on every push to
+# main.  The site is published to the `gh-pages` branch; GitHub Pages must be
+# configured to serve from that branch (Settings → Pages → Source: gh-pages).
+# ============================================================================
+name: Docs
+
+on:
+  push:
+    branches: [main]
+
+# Required so mkdocs gh-deploy can push to the gh-pages branch.
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Build and deploy docs → GitHub Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history lets mkdocstrings pick up git metadata if needed.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-docs-${{ hashFiles('docs/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-docs-
+
+      - name: Install docs dependencies
+        run: pip install -r docs/requirements.txt
+
+      # mkdocstrings imports hr_pipeline to extract docstrings — the package
+      # must be installed for the build to succeed.
+      - name: Install hr_pipeline
+        run: pip install -e .
+
+      - name: Build and deploy
+        run: mkdocs gh-deploy --force

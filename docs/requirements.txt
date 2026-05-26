@@ -1,0 +1,7 @@
+# Documentation site dependencies.
+# Install with: pip install -r docs/requirements.txt
+# Then: mkdocs serve   (local preview at http://127.0.0.1:8000)
+#       mkdocs build   (static site → site/)
+
+mkdocs-material>=9.5.0,<10.0.0
+mkdocstrings[python]>=0.25.0,<1.0.0

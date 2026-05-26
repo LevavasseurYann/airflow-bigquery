@@ -1,0 +1,102 @@
+site_name: airflow-bigquery
+site_description: >-
+  A production-style Apache Airflow 3 pipeline orchestrating HR analytics
+  with dbt, asset-driven scheduling, and integrated data quality.
+site_author: Yann Levavasseur
+site_url: https://levavasseuryann.github.io/airflow-bigquery/
+repo_name: LevavasseurYann/airflow-bigquery
+repo_url: https://github.com/LevavasseurYann/airflow-bigquery
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            separate_signature: true
+            show_signature_annotations: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Local Development: local-development.md
+    - Production (GCP): production-gcp.md
+  - Architecture:
+    - Overview: architecture.md
+    - DAGs: dags.md
+    - Data Quality: data-quality.md
+  - Learning Guide: learning-guide.md
+  - API Reference:
+    - api/index.md
+    - config: api/config.md
+    - warehouse: api/warehouse.md
+    - ingestion: api/ingestion.md
+    - quality.checks: api/quality-checks.md
+    - quality.suite: api/quality-suite.md
+    - operators: api/operators.md
+  - ADRs:
+    - "0001 · Record decisions": adr/0001-record-architecture-decisions.md
+    - "0002 · Airflow 3 + Assets": adr/0002-airflow-3-and-asset-driven-scheduling.md
+    - "0003 · Cosmos": adr/0003-cosmos-for-dbt-orchestration.md
+    - "0004 · DuckDB / BigQuery": adr/0004-duckdb-local-bigquery-production.md
+    - "0005 · CeleryExecutor": adr/0005-celery-executor.md
+    - "0006 · SQL Identifier Safety": adr/0006-sql-identifier-validation.md
+    - "0007 · Parse vs Run-time": adr/0007-dag-parse-time-vs-run-time-configuration.md
+  - Contributing: contributing.md
