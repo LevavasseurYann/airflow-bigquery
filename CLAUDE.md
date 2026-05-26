@@ -58,11 +58,26 @@ src/hr_pipeline/
   operators/
     data_quality.py  # DataQualityCheckOperator (custom)
 
-include/dbt/     # projet dbt embarqué (staging → intermediate → marts)
-include/data/raw/  # CSV sources (employees_eu/us/apac.csv)
-config/airflow_local_settings.py  # cluster policies (parse-time guardrails)
-tests/           # test_dag_integrity.py, test_ingestion.py, test_warehouse.py,
-                 # test_quality.py, test_config.py
+include/
+  dbt/         # projet dbt embarqué (staging → intermediate → marts)
+  data/
+    raw/       # CSV sources (employees_eu/us/apac.csv)
+    _staging/  # zone de landing Parquet (généré par ingestion.py, gitignored)
+
+scripts/
+  seed_local_warehouse.py  # seed DuckDB sans Airflow (CI + exploration locale)
+                           # Usage: HR_RAW_DATA_DIR=./include/data/raw DUCKDB_PATH=./include/data/warehouse.duckdb python scripts/seed_local_warehouse.py
+
+config/
+  airflow_local_settings.py  # cluster policies (parse-time guardrails)
+  airflow.cfg                # config Airflow locale (géré par le container — ne pas éditer manuellement)
+
+plugins/    # répertoire vide, réservé pour custom Airflow plugins
+tests/      # test_dag_integrity.py, test_ingestion.py, test_warehouse.py,
+            # test_quality.py, test_config.py
+docs/adr/   # 7 Architecture Decision Records — lire avant de modifier une décision structurelle
+            # (0002: Asset-driven scheduling, 0003: Cosmos, 0004: DuckDB/BQ, 0005: Celery,
+            #  0006: SQL validation, 0007: parse-time vs run-time config)
 ```
 
 ---
@@ -77,11 +92,6 @@ docker compose up airflow-init  # bootstrap DB + admin + pool
 docker compose up -d
 # UI : http://localhost:8080  (airflow / airflow)
 
-# Avec make (Git Bash / WSL)
-make build && make init && make up
-make down           # arrêt
-make reset          # clean slate (volumes inclus)
-
 # Tests (sans Docker)
 pytest -m "not dags"   # rapide, pas d'Airflow requis
 pytest -m dags         # DAG-integrity (Airflow + Cosmos requis)
@@ -92,12 +102,40 @@ ruff check src dags tests
 ruff format src dags tests
 mypy
 
+# Seed DuckDB local sans Airflow (CI / exploration dbt hors container)
+python scripts/seed_local_warehouse.py
+
 # dbt (dans le container)
 docker compose exec airflow-worker dbt debug \
   --project-dir /opt/airflow/include/dbt --profiles-dir /opt/airflow/include/dbt
 docker compose exec airflow-worker dbt build \
   --project-dir /opt/airflow/include/dbt --profiles-dir /opt/airflow/include/dbt
 ```
+
+**Makefile (Git Bash / WSL / Linux/macOS)** — `make help` pour la liste complète :
+
+| Cible | Action |
+|---|---|
+| `make env` | Crée `.env` depuis `.env.example` (no-op si existe déjà) |
+| `make build` | Build l'image Airflow custom |
+| `make init` | Bootstrap DB + admin + pools (`env` inclus) |
+| `make up` | Démarre le cluster en arrière-plan |
+| `make down` | Arrête et supprime les containers |
+| `make restart` | `down` + `up` |
+| `make stop` | Arrête sans supprimer les containers |
+| `make logs` | Tail les logs de tous les services |
+| `make ps` | Statut des services |
+| `make shell` | Shell bash dans le worker |
+| `make lint` | `ruff check` |
+| `make format` | `ruff format` + `ruff check --fix` |
+| `make typecheck` | `mypy` |
+| `make test` | Suite complète pytest |
+| `make test-dags` | Tests DAG-integrity seulement |
+| `make dbt-debug` | `dbt debug` dans le container |
+| `make dbt-build` | `dbt build` dans le container |
+| `make dbt-docs` | `dbt docs generate` dans le container |
+| `make clean` | Supprime caches, `include/dbt/target`, fichiers DuckDB |
+| `make reset` | `down --volumes` + `clean` (clean slate complet) |
 
 ---
 
@@ -134,8 +172,24 @@ Toujours lire la config via `Settings.from_env()` — jamais `os.getenv()` direc
 - **DuckDB par défaut** — éviter tout appel BigQuery/GCP sans nécessité (coûts)
 - **Pas de `os.getenv()` direct** dans les DAGs — passer par `Settings`
 - **Ne pas modifier `config/airflow_local_settings.py`** sans comprendre les cluster policies
+- **Ne pas modifier `config/airflow.cfg`** manuellement — géré par le container
 - **Tests doivent passer** avant tout commit — `pytest -m "not dags"` au minimum
 - **Diff minimal** — ne pas refactorer ce qui n'est pas dans le scope de la tâche
+- **Pre-commit hooks actifs** (`.pre-commit-config.yaml`) : ruff lint/format + détection de clés privées — ils bloquent le commit si les checks échouent
+
+## CI/CD
+
+`.github/workflows/ci.yml` — 4 jobs indépendants sur push/PR vers `main` :
+
+| Job | Ce qu'il prouve |
+|---|---|
+| `lint` | `ruff check` + `ruff format --check` |
+| `unit-tests` | `pytest -m "not dags"` — rapide, hermétique |
+| `dbt-build` | dbt seed + run + test sur DuckDB (seed via `scripts/seed_local_warehouse.py`) |
+| `dag-validation` | Parse tous les DAGs via DagBag (Airflow + Cosmos requis) |
+
+`.github/workflows/docs.yml` — déploie le site MkDocs sur GitHub Pages.  
+`.github/dependabot.yml` — mises à jour automatiques des dépendances GitHub Actions.
 
 ---
 

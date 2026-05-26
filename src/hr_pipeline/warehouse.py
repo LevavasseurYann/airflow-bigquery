@@ -203,9 +203,9 @@ class BigQueryWarehouse(Warehouse):
 
         try:
             self._client.get_table(f"{self._project}.{schema}.{table}")
+            return True
         except NotFound:
             return False
-        return True
 
     def close(self) -> None:
         self._client.close()

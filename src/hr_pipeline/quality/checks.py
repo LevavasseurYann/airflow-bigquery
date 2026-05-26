@@ -66,6 +66,11 @@ class QualityReport:
         return all(result.passed for result in self.results)
 
     @property
+    def passed_count(self) -> int:
+        """Number of checks that passed."""
+        return sum(1 for r in self.results if r.passed)
+
+    @property
     def blocking_failures(self) -> list[CheckResult]:
         """Failed ERROR-severity checks — these must fail the DAG."""
         return [r for r in self.results if not r.passed and r.severity is Severity.ERROR]
@@ -80,9 +85,8 @@ class QualityReport:
 
     def summary(self) -> str:
         """A human-readable one-paragraph summary for logs and alerts."""
-        passed = sum(1 for r in self.results if r.passed)
         lines = [
-            f"Data quality: {passed}/{len(self.results)} checks passed.",
+            f"Data quality: {self.passed_count}/{len(self.results)} checks passed.",
         ]
         for result in self.results:
             if not result.passed:

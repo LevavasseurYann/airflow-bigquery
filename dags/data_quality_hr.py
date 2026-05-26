@@ -116,7 +116,7 @@ def data_quality_hr() -> None:
                     "run_id": str(context["run_id"]),
                     "generated_at": pd.Timestamp.now(tz="UTC"),
                     "total_checks": len(report.results),
-                    "passed": sum(1 for r in report.results if r.passed),
+                    "passed": report.passed_count,
                     "blocking_failures": len(report.blocking_failures),
                     "warnings": len(report.warnings),
                 }
