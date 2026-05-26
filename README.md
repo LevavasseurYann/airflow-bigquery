@@ -15,7 +15,10 @@ and enforce **data quality** — the modern data stack, end to end.
 ![BigQuery](https://img.shields.io/badge/Google%20BigQuery-production-4285F4)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-0a66c2)](https://levavasseuryann.github.io/airflow-bigquery/)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+### 📖 [levavasseuryann.github.io/airflow-bigquery](https://levavasseuryann.github.io/airflow-bigquery/)
 
 ---
 
@@ -217,15 +220,18 @@ pytest -m dags         # DAG-integrity tests (needs Airflow + Cosmos)
 
 ## Documentation
 
+**→ [levavasseuryann.github.io/airflow-bigquery](https://levavasseuryann.github.io/airflow-bigquery/)** — full site with API reference, deep-dives and ADRs.
+
 | Document | Content |
 |----------|---------|
-| [docs/architecture.md](docs/architecture.md) | Components, data flow, scheduling model |
-| [docs/dags.md](docs/dags.md) | Per-DAG walkthrough |
-| [docs/local-development.md](docs/local-development.md) | Running, debugging, troubleshooting |
-| [docs/production-gcp.md](docs/production-gcp.md) | Deploying against BigQuery |
-| [docs/data-quality.md](docs/data-quality.md) | The quality strategy |
+| [Architecture](https://levavasseuryann.github.io/airflow-bigquery/architecture/) | Components, data flow, scheduling model |
+| [DAGs](https://levavasseuryann.github.io/airflow-bigquery/dags/) | Per-DAG walkthrough |
+| [Local development](https://levavasseuryann.github.io/airflow-bigquery/local-development/) | Running, debugging, troubleshooting |
+| [Production / GCP](https://levavasseuryann.github.io/airflow-bigquery/production-gcp/) | Deploying against BigQuery |
+| [Data quality](https://levavasseuryann.github.io/airflow-bigquery/data-quality/) | The quality strategy |
+| [API reference](https://levavasseuryann.github.io/airflow-bigquery/api/) | `hr_pipeline` package — auto-generated |
+| [ADRs](https://levavasseuryann.github.io/airflow-bigquery/adr/0001-record-architecture-decisions/) | Architecture Decision Records — the *why* (7 ADRs) |
 | [LEARNING_GUIDE.md](LEARNING_GUIDE.md) | Guided tour of every concept, hands-on |
-| [docs/adr/](docs/adr/) | Architecture Decision Records — the *why* (7 ADRs) |
 
 ---
 
