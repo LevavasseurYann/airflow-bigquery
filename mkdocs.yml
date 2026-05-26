@@ -99,4 +99,14 @@ nav:
     - "0005 · CeleryExecutor": adr/0005-celery-executor.md
     - "0006 · SQL Identifier Safety": adr/0006-sql-identifier-validation.md
     - "0007 · Parse vs Run-time": adr/0007-dag-parse-time-vs-run-time-configuration.md
+  - Deep Dive:
+    - "Config — Settings" : deep-dive/config.md
+    - "Warehouse — Abstraction" : deep-dive/warehouse.md
+    - "Assets — Asset-driven scheduling" : deep-dive/assets.md
+    - "Ingestion — extract → land → load" : deep-dive/ingestion.md
+    - "DAG 1 — ingest_hr_sources" : deep-dive/dag-ingest.md
+    - "DAG 2 — transform_hr_dbt" : deep-dive/dag-transform.md
+    - "Quality engine — checks & suite" : deep-dive/quality-engine.md
+    - "DAG 3 — data_quality_hr" : deep-dive/dag-quality.md
+    - "Operator — DataQualityCheckOperator" : deep-dive/operator.md
   - Contributing: contributing.md
