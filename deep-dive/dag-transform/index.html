@@ -1,0 +1,3050 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A production-style Apache Airflow 3 pipeline orchestrating HR analytics with dbt, asset-driven scheduling, and integrated data quality.">
+      
+      
+        <meta name="author" content="Yann Levavasseur">
+      
+      
+        <link rel="canonical" href="https://levavasseuryann.github.io/airflow-bigquery/deep-dive/dag-transform/">
+      
+      
+        <link rel="prev" href="../dag-ingest/">
+      
+      
+        <link rel="next" href="../quality-engine/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>DAG 2 — transform_hr_dbt - airflow-bigquery</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#deep-dive-dagstransform_hr_dbtpy" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="airflow-bigquery" class="md-header__button md-logo" aria-label="airflow-bigquery" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            airflow-bigquery
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DAG 2 — transform_hr_dbt
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LevavasseurYann/airflow-bigquery" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LevavasseurYann/airflow-bigquery
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../local-development/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../architecture/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../learning-guide/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Learning Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../adr/0001-record-architecture-decisions/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  ADRs
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../config/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="airflow-bigquery" class="md-nav__button md-logo" aria-label="airflow-bigquery" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    airflow-bigquery
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LevavasseurYann/airflow-bigquery" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LevavasseurYann/airflow-bigquery
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../local-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../production-gcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production (GCP)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAGs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data-quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learning-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/warehouse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    warehouse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ingestion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ingestion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/quality-checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    quality.checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/quality-suite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    quality.suite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/operators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0001-record-architecture-decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0001 · Record decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0002-airflow-3-and-asset-driven-scheduling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0002 · Airflow 3 + Assets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0003-cosmos-for-dbt-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0003 · Cosmos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0004-duckdb-local-bigquery-production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0004 · DuckDB / BigQuery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0005-celery-executor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0005 · CeleryExecutor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0006-sql-identifier-validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0006 · SQL Identifier Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0007-dag-parse-time-vs-run-time-configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0007 · Parse vs Run-time
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deep Dive
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config — Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../warehouse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Warehouse — Abstraction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../assets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Assets — Asset-driven scheduling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ingestion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ingestion — extract → land → load
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dag-ingest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAG 1 — ingest_hr_sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAG 2 — transform_hr_dbt
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAG 2 — transform_hr_dbt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pourquoi-ce-fichier-existe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pourquoi ce fichier existe
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vue-densemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vue d'ensemble
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#walkthrough-complet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walkthrough complet
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Walkthrough complet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#imports-et-from-__future__-import-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imports et from __future__ import annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lexception-parse-time-_settings-settingsfrom_env" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L'exception parse-time — _settings = Settings.from_env()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-cosmos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Cosmos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#le-decorateur-dag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Le décorateur @dag
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify_raw_source-le-garde-fou" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        verify_raw_source — le garde-fou
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dbttaskgroup-le-cur-du-dag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DbtTaskGroup — le cœur du DAG
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish_marts-le-producteur-dasset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        publish_marts — le producteur d'Asset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dependances-et-chaine-dexecution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dépendances et chaîne d'exécution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connexions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connexions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Connexions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#upstream-ingest_hr_sources-via-raw_hr_employees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upstream — ingest_hr_sources via RAW_HR_EMPLOYEES
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#downstream-data_quality_hr-via-hr_marts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Downstream — data_quality_hr via HR_MARTS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vue-globale-de-la-chaine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vue globale de la chaîne
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cosmos-deep-dive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cosmos deep-dive
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cosmos deep-dive">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ce-que-cosmos-fait-sous-le-capot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ce que Cosmos fait sous le capot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ce-que-cosmos-nest-pas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ce que Cosmos n'est pas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#les-modes-dexecution-cosmos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Les modes d'exécution Cosmos
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#le-pool-dbt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Le pool dbt
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Le pool dbt">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pourquoi-un-pool-dedie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pourquoi un pool dédié
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-du-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration du pool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-vers-bigquery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration vers BigQuery
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pieges-gotchas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pièges &amp; gotchas
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quality-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality engine — checks & suite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dag-quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAG 3 — data_quality_hr
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator — DataQualityCheckOperator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pourquoi-ce-fichier-existe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pourquoi ce fichier existe
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vue-densemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vue d'ensemble
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#walkthrough-complet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Walkthrough complet
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Walkthrough complet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#imports-et-from-__future__-import-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Imports et from __future__ import annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lexception-parse-time-_settings-settingsfrom_env" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L'exception parse-time — _settings = Settings.from_env()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-cosmos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Cosmos
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#le-decorateur-dag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Le décorateur @dag
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verify_raw_source-le-garde-fou" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        verify_raw_source — le garde-fou
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dbttaskgroup-le-cur-du-dag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DbtTaskGroup — le cœur du DAG
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#publish_marts-le-producteur-dasset" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        publish_marts — le producteur d'Asset
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dependances-et-chaine-dexecution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dépendances et chaîne d'exécution
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connexions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connexions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Connexions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#upstream-ingest_hr_sources-via-raw_hr_employees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upstream — ingest_hr_sources via RAW_HR_EMPLOYEES
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#downstream-data_quality_hr-via-hr_marts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Downstream — data_quality_hr via HR_MARTS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vue-globale-de-la-chaine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vue globale de la chaîne
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cosmos-deep-dive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cosmos deep-dive
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cosmos deep-dive">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ce-que-cosmos-fait-sous-le-capot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ce que Cosmos fait sous le capot
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ce-que-cosmos-nest-pas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ce que Cosmos n'est pas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#les-modes-dexecution-cosmos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Les modes d'exécution Cosmos
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#le-pool-dbt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Le pool dbt
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Le pool dbt">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pourquoi-un-pool-dedie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pourquoi un pool dédié
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-du-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration du pool
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-vers-bigquery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration vers BigQuery
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pieges-gotchas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pièges &amp; gotchas
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="deep-dive-dagstransform_hr_dbtpy">Deep Dive — <code>dags/transform_hr_dbt.py</code><a class="headerlink" href="#deep-dive-dagstransform_hr_dbtpy" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>Annotation complète du DAG de transformation. Chaque décision est justifiée — de
+l'exception parse-time à la sérialisation DuckDB en passant par ce que Cosmos fait
+réellement sous le capot.</p>
+</blockquote>
+<hr />
+<h2 id="pourquoi-ce-fichier-existe">Pourquoi ce fichier existe<a class="headerlink" href="#pourquoi-ce-fichier-existe" title="Permanent link">&para;</a></h2>
+<p>Le pipeline HR a besoin d'une étape de transformation : prendre les données brutes
+landées par <code>ingest_hr_sources</code> et les convertir en marts analytiques propres
+(<code>dim_departments</code>, <code>fct_employees_active</code>, <code>fct_employee_headcount_monthly</code>).</p>
+<p>L'option naïve serait un <code>BashOperator</code> unique qui lance <code>dbt build</code>. Elle fonctionnerait.
+Mais elle produirait <strong>une tâche opaque</strong> dans l'UI Airflow : un seul bloc vert ou rouge,
+sans distinguer quel modèle a échoué, sans logs par modèle, sans retry ciblé, sans lineage.</p>
+<p>La décision architecturale documentée dans
+<a href="../../adr/0003-cosmos-for-dbt-orchestration/">ADR-0003</a> tranche autrement :
+orchestrer dbt via <strong>astronomer-cosmos</strong>, qui parse le projet dbt et rend <strong>chaque
+modèle, seed, snapshot et test comme une tâche Airflow native</strong>. L'intégration dbt ×
+Airflow devient totale : l'UI Airflow montre exactement où la transformation a cassé,
+avec le log dbt du modèle concerné, et peut rejouer ce seul modèle.</p>
+<p><code>transform_hr_dbt.py</code> est le pivot central du pipeline : il consomme le résultat de
+l'ingestion (via Asset) et produit les marts que la qualité va vérifier (via Asset).</p>
+<div class="admonition note">
+<p class="admonition-title">ADR de référence</p>
+<ul>
+<li><a href="../../adr/0002-airflow-3-and-asset-driven-scheduling/">ADR-0002</a> — asset-driven scheduling</li>
+<li><a href="../../adr/0003-cosmos-for-dbt-orchestration/">ADR-0003</a> — Cosmos pour dbt</li>
+<li><a href="../../adr/0007-dag-parse-time-vs-run-time-configuration/">ADR-0007</a> — parse-time vs run-time</li>
+</ul>
+</div>
+<hr />
+<h2 id="vue-densemble">Vue d'ensemble<a class="headerlink" href="#vue-densemble" title="Permanent link">&para;</a></h2>
+<p><code>transform_hr_dbt</code> tourne le projet dbt embarqué dans <code>include/dbt/</code> via Cosmos. Il
+produit l'intégralité de la couche marts — staging, intermediate, marts, seeds, snapshot
+SCD2 et tests dbt — chacun comme une tâche Airflow.</p>
+<p><strong>Shape du DAG :</strong></p>
+<pre class="mermaid"><code>flowchart LR
+    A([Asset: raw_hr_employees]) --&gt;|schedule trigger| B
+
+    subgraph transform_hr_dbt
+        B[verify_raw_source]
+        subgraph dbt_transform [TaskGroup: dbt_transform]
+            direction TB
+            S1[seed: department_targets]
+            S2[run: stg_employees]
+            S3[test: stg_employees]
+            S4[run: int_employees_enriched]
+            S5[run: snp_employees]
+            S6[run: dim_departments]
+            S7[run: fct_employees_active]
+            S8[run: fct_employee_headcount_monthly]
+            S9[test: ...]
+            S1 --&gt; S2 --&gt; S3 --&gt; S4 --&gt; S6 --&gt; S9
+            S4 --&gt; S7 --&gt; S9
+            S4 --&gt; S8 --&gt; S9
+            S2 --&gt; S5
+        end
+        E[publish_marts]
+        B --&gt; dbt_transform --&gt; E
+    end
+
+    E --&gt;|outlets| F([Asset: hr_marts])
+    F --&gt;|schedule trigger| G[data_quality_hr]</code></pre>
+<p><strong>Résumé :</strong></p>
+<table>
+<thead>
+<tr>
+<th>Propriété</th>
+<th>Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schedule</td>
+<td>Asset-driven — <code>[RAW_HR_EMPLOYEES]</code></td>
+</tr>
+<tr>
+<td>Produit</td>
+<td>Asset <code>HR_MARTS</code></td>
+</tr>
+<tr>
+<td>Catchup</td>
+<td><code>False</code></td>
+</tr>
+<tr>
+<td>Max active runs</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Pool dbt</td>
+<td>1 slot (DuckDB), extensible BigQuery</td>
+</tr>
+<tr>
+<td>Retry par tâche dbt</td>
+<td>1 (en plus des 2 DEFAULT_ARGS)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="walkthrough-complet">Walkthrough complet<a class="headerlink" href="#walkthrough-complet" title="Permanent link">&para;</a></h2>
+<h3 id="imports-et-from-__future__-import-annotations">Imports et <code>from __future__ import annotations</code><a class="headerlink" href="#imports-et-from-__future__-import-annotations" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airflow.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AirflowException</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">airflow.sdk</span><span class="w"> </span><span class="kn">import</span> <span class="n">dag</span><span class="p">,</span> <span class="n">task</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cosmos</span><span class="w"> </span><span class="kn">import</span> <span class="n">DbtTaskGroup</span><span class="p">,</span> <span class="n">ExecutionConfig</span><span class="p">,</span> <span class="n">ProfileConfig</span><span class="p">,</span> <span class="n">ProjectConfig</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">cosmos.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExecutionMode</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="kn">from</span><span class="w"> </span><span class="nn">common</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_ARGS</span><span class="p">,</span> <span class="n">DEFAULT_START_DATE</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hr_pipeline.assets</span><span class="w"> </span><span class="kn">import</span> <span class="n">HR_MARTS</span><span class="p">,</span> <span class="n">RAW_HR_EMPLOYEES</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hr_pipeline.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">Settings</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hr_pipeline.ingestion</span><span class="w"> </span><span class="kn">import</span> <span class="n">RAW_EMPLOYEES_TABLE</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hr_pipeline.warehouse</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_warehouse</span>
+</code></pre></div>
+<p><code>from airflow.sdk import dag, task</code> — c'est l'API Airflow 3 (Task SDK). Sur Airflow 2,
+les mêmes noms vivaient dans <code>airflow.decorators</code>. Le Task SDK est l'API actuelle et
+recommandée.</p>
+<p><code>from cosmos import ...</code> — les quatre objets Cosmos que ce DAG utilise :
+<code>DbtTaskGroup</code> pour encapsuler le projet dbt comme un groupe de tâches, et les trois
+configs (<code>ProjectConfig</code>, <code>ProfileConfig</code>, <code>ExecutionConfig</code>) qui décrivent respectivement
+où est le projet dbt, quel profil utiliser, et comment exécuter dbt.</p>
+<p><code>from common import DEFAULT_ARGS, DEFAULT_START_DATE</code> — centralisation des defaults.
+Jamais redéfinis localement. Voir <code>dags/common.py</code> pour le détail du retry policy et du
+<code>on_failure_callback</code>.</p>
+<hr />
+<h3 id="lexception-parse-time-_settings-settingsfrom_env">L'exception parse-time — <code>_settings = Settings.from_env()</code><a class="headerlink" href="#lexception-parse-time-_settings-settingsfrom_env" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Resolved once at parse time — the DAG processor has the full environment.</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">_settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">La seule exception documentée à la règle parse-time</p>
+<p>La règle générale du projet (ADR-0007) interdit <code>Settings.from_env()</code> au niveau
+module d'un DAG. Ce fichier est <strong>l'unique exception explicitement documentée</strong>.</p>
+</div>
+<p>Voici pourquoi cette exception est inévitable.</p>
+<p>Cosmos doit construire le <code>DbtTaskGroup</code> au moment où Python importe le module — c'est-à-dire
+au <strong>parse time</strong>, quand le DAG processor d'Airflow scanne les fichiers. Pour construire
+ce groupe, Cosmos a besoin de :</p>
+<ul>
+<li><code>dbt_project_dir</code> — pour trouver <code>dbt_project.yml</code>, parcourir les modèles, et construire
+  le graphe de dépendances dbt qui deviendra le graphe de tâches Airflow.</li>
+<li><code>profiles_yml_filepath</code> — pour valider la configuration de connexion.</li>
+<li><code>dbt_target</code> — pour choisir entre le target <code>dev</code> (DuckDB) et <code>prod</code> (BigQuery).</li>
+</ul>
+<p>Ces trois valeurs viennent de <code>Settings</code>. Il n'y a pas d'alternative : si on déplace
+<code>Settings.from_env()</code> à l'intérieur d'une <code>@task</code>, le <code>DbtTaskGroup</code> n'est plus
+construit — on obtient un DAG vide.</p>
+<p><strong>Ce que cette exception ne cause pas :</strong> un <code>Settings.from_env()</code> en production
+(<code>HR_ENV=production</code>) au parse-time appellera <code>validate()</code>, qui exige <code>GCP_PROJECT</code>.
+Si <code>GCP_PROJECT</code> n'est pas défini, on obtient un import error DAG — une alerte rouge
+dans l'UI. C'est le comportement attendu : un cluster mal configuré doit le signaler.</p>
+<div class="admonition tip">
+<p class="admonition-title">Différence avec <code>data_quality_hr</code></p>
+<p><code>data_quality_hr.py</code> a aussi du code au niveau module (<code>_QUALITY_SUITE</code>), mais
+utilise <code>os.getenv()</code> directement — pas <code>Settings.from_env()</code>. C'est parce qu'il
+n'a besoin que d'un seul champ (<code>marts_schema</code>) et <code>os.getenv()</code> ne lève jamais
+d'exception. La règle : quand Cosmos vous y force, utilisez <code>Settings.from_env()</code>.
+Sinon, préférez <code>os.getenv()</code> au parse-time.</p>
+</div>
+<hr />
+<h3 id="configuration-cosmos">Configuration Cosmos<a class="headerlink" href="#configuration-cosmos" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">_profile_config</span> <span class="o">=</span> <span class="n">ProfileConfig</span><span class="p">(</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">profile_name</span><span class="o">=</span><span class="s2">&quot;hr_analytics&quot;</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">target_name</span><span class="o">=</span><span class="n">_settings</span><span class="o">.</span><span class="n">dbt_target</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">profiles_yml_filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">_settings</span><span class="o">.</span><span class="n">dbt_project_dir</span> <span class="o">/</span> <span class="s2">&quot;profiles.yml&quot;</span><span class="p">),</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">)</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">_project_config</span> <span class="o">=</span> <span class="n">ProjectConfig</span><span class="p">(</span><span class="n">dbt_project_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">_settings</span><span class="o">.</span><span class="n">dbt_project_dir</span><span class="p">))</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">_execution_config</span> <span class="o">=</span> <span class="n">ExecutionConfig</span><span class="p">(</span><span class="n">execution_mode</span><span class="o">=</span><span class="n">ExecutionMode</span><span class="o">.</span><span class="n">LOCAL</span><span class="p">)</span>
+</code></pre></div>
+<p>Trois objets de configuration, trois rôles distincts :</p>
+<p><strong><code>ProfileConfig</code></strong> — dit à Cosmos <em>comment se connecter</em> au warehouse. <code>profile_name</code>
+correspond au bloc de premier niveau dans <code>profiles.yml</code> (<code>hr_analytics:</code>). <code>target_name</code>
+vaut <code>"dev"</code> en local (DuckDB) ou <code>"prod"</code> en production (BigQuery) — c'est <code>Settings.dbt_target</code>
+qui fait cette translation. En changeant uniquement <code>HR_ENV</code>, le même DAG bascule de
+DuckDB vers BigQuery sans modifier une ligne de code.</p>
+<p><strong><code>ProjectConfig</code></strong> — dit à Cosmos <em>où trouver le projet dbt</em>. Cosmos va lire
+<code>dbt_project.yml</code>, parcourir <code>models/</code>, <code>snapshots/</code>, <code>seeds/</code>, <code>tests/</code> pour construire
+le graphe de dépendances qu'il transformera en tâches Airflow.</p>
+<p><strong><code>ExecutionConfig(execution_mode=ExecutionMode.LOCAL)</code></strong> — dit à Cosmos <em>comment
+exécuter dbt</em>. <code>LOCAL</code> signifie que Cosmos appelle directement le binaire dbt installé
+dans l'image Docker du worker Airflow. C'est le mode le plus simple.</p>
+<p>Les alternatives sont résumées dans la section <a href="#cosmos-deep-dive">Cosmos deep-dive</a> plus bas.</p>
+<hr />
+<h3 id="le-decorateur-dag">Le décorateur <code>@dag</code><a class="headerlink" href="#le-decorateur-dag" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@dag</span><span class="p">(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;transform_hr_dbt&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Transform raw HR data into curated marts with dbt (via Cosmos).&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">schedule</span><span class="o">=</span><span class="p">[</span><span class="n">RAW_HR_EMPLOYEES</span><span class="p">],</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">start_date</span><span class="o">=</span><span class="n">DEFAULT_START_DATE</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">max_active_runs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">default_args</span><span class="o">=</span><span class="n">DEFAULT_ARGS</span><span class="p">,</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;hr&quot;</span><span class="p">,</span> <span class="s2">&quot;transformation&quot;</span><span class="p">,</span> <span class="s2">&quot;dbt&quot;</span><span class="p">,</span> <span class="s2">&quot;layer:marts&quot;</span><span class="p">],</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">)</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="k">def</span><span class="w"> </span><span class="nf">transform_hr_dbt</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</code></pre></div>
+<p><strong><code>schedule=[RAW_HR_EMPLOYEES]</code></strong> — les crochets sont essentiels. En Airflow 3, une
+liste d'Assets en schedule signifie "déclenche-toi dès qu'un des Assets de cette liste
+est mis à jour". Sans les crochets (<code>schedule=RAW_HR_EMPLOYEES</code>), Airflow interpréterait
+la valeur comme une cron expression et lèverait une erreur à l'import.</p>
+<p>C'est le cœur de l'asset-driven scheduling : ce DAG ne connaît pas l'existence de
+<code>ingest_hr_sources</code>. Il sait seulement qu'il attend <code>raw_hr_employees</code>. Si demain on
+remplace <code>ingest_hr_sources</code> par un autre système qui produit le même Asset, ce DAG
+se déclenche sans modification.</p>
+<p><strong><code>catchup=False</code></strong> — sans ceci, Airflow tenterait de rejouer toutes les runs manquées
+depuis <code>start_date</code>. Pour un DAG asset-driven, cela n'a pas de sens : il n'y a pas eu
+de "runs manquées", juste des moments où l'Asset n'a pas été produit.</p>
+<p><strong><code>max_active_runs=1</code></strong> — DuckDB ne supporte pas les écritures concurrentes. Deux runs
+simultanées créeraient une deadlock sur le fichier <code>.duckdb</code>. Ce paramètre garantit
+qu'une seule run tourne à la fois. Même en production BigQuery, <code>max_active_runs=1</code>
+est une bonne pratique pour les transformations dbt qui reconstruisent des tables.</p>
+<hr />
+<h3 id="verify_raw_source-le-garde-fou"><code>verify_raw_source</code> — le garde-fou<a class="headerlink" href="#verify_raw_source-le-garde-fou" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nd">@task</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">verify_raw_source</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Fail fast if the raw table dbt depends on is missing or empty.&quot;&quot;&quot;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="k">with</span> <span class="n">get_warehouse</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">warehouse</span><span class="p">:</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">warehouse</span><span class="o">.</span><span class="n">table_exists</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">raw_schema</span><span class="p">,</span> <span class="n">RAW_EMPLOYEES_TABLE</span><span class="p">):</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>            <span class="k">raise</span> <span class="n">AirflowException</span><span class="p">(</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">raw_schema</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">RAW_EMPLOYEES_TABLE</span><span class="si">}</span><span class="s2"> does not exist — &quot;</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>                <span class="s2">&quot;run the ingest_hr_sources DAG first.&quot;</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>            <span class="p">)</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="n">rows</span> <span class="o">=</span> <span class="n">warehouse</span><span class="o">.</span><span class="n">row_count</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">raw_schema</span><span class="p">,</span> <span class="n">RAW_EMPLOYEES_TABLE</span><span class="p">)</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    <span class="k">if</span> <span class="n">rows</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>        <span class="k">raise</span> <span class="n">AirflowException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">settings</span><span class="o">.</span><span class="n">raw_schema</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">RAW_EMPLOYEES_TABLE</span><span class="si">}</span><span class="s2"> is empty.&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;raw_rows&quot;</span><span class="p">:</span> <span class="n">rows</span><span class="p">}</span>
+</code></pre></div>
+<p>Cette tâche répond à une question : pourquoi ne pas laisser dbt échouer seul si la
+source est absente ?</p>
+<p>dbt échouerait effectivement — mais avec un message d'erreur SQL cryptique enterré
+dans les logs du modèle <code>stg_employees</code> (premier modèle à lire <code>raw_hr.employees</code>).
+Un opérateur verrait une tâche rouge sans contexte immédiat. <code>verify_raw_source</code> échoue
+<strong>avant</strong> que Cosmos ne démarre, avec un message actionnable : "la table n'existe pas,
+lance d'abord <code>ingest_hr_sources</code>."</p>
+<p><strong><code>read_only=True</code></strong> — cette tâche ne fait que lire (<code>table_exists</code>, <code>row_count</code>). Elle
+n'a pas besoin d'acquérir le verrou d'écriture DuckDB. Sans ce flag, elle entrerait en
+concurrence avec d'autres tâches du pool <code>dbt</code> sur le verrou du fichier <code>.duckdb</code>, même
+si elle ne modifie rien. Avec <code>read_only=True</code>, elle utilise une connexion DuckDB en mode
+lecture seule et ne bloque pas.</p>
+<div class="admonition note">
+<p class="admonition-title">DuckDB read-only en pratique</p>
+<p>DuckDB supporte plusieurs lecteurs simultanés, mais un seul écrivain à la fois.
+<code>read_only=True</code> dans <code>get_warehouse()</code> ouvre le fichier <code>.duckdb</code> en mode
+<code>read_only=True</code> de l'API DuckDB — compatible avec une connexion d'écriture
+ouverte ailleurs (par le pool dbt par exemple).</p>
+</div>
+<hr />
+<h3 id="dbttaskgroup-le-cur-du-dag"><code>DbtTaskGroup</code> — le cœur du DAG<a class="headerlink" href="#dbttaskgroup-le-cur-du-dag" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">dbt_transform</span> <span class="o">=</span> <span class="n">DbtTaskGroup</span><span class="p">(</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">group_id</span><span class="o">=</span><span class="s2">&quot;dbt_transform&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">project_config</span><span class="o">=</span><span class="n">_project_config</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">profile_config</span><span class="o">=</span><span class="n">_profile_config</span><span class="p">,</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">execution_config</span><span class="o">=</span><span class="n">_execution_config</span><span class="p">,</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">operator_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;pool&quot;</span><span class="p">:</span> <span class="s2">&quot;dbt&quot;</span><span class="p">},</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">default_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;retries&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="p">)</span>
+</code></pre></div>
+<p>C'est la ligne qui remplace des dizaines de <code>BashOperator</code> manuels. Cosmos parse le
+projet dbt et génère dynamiquement un groupe de tâches Airflow, une par nœud du graphe dbt.</p>
+<p><strong><code>operator_args={"pool": "dbt"}</code></strong> — applique le pool <code>dbt</code> à <strong>toutes</strong> les tâches
+générées par Cosmos, y compris les tests, les seeds et le snapshot. Sans ce paramètre,
+les tâches Cosmos n'auraient pas de pool, et plusieurs d'entre elles pourraient s'exécuter
+en parallèle — ce qui deadlockerait DuckDB.</p>
+<p><strong><code>default_args={"retries": 1}</code></strong> — ajoute un retry par modèle, en plus des 2 retries
+de <code>DEFAULT_ARGS</code>. Pourquoi ? Un modèle dbt peut échouer sur une erreur transitoire de
+connexion (BigQuery timeout, file lock DuckDB momentané). Un retry automatique évite
+d'avoir à rejouer manuellement un modèle qui aurait réussi à la deuxième tentative.</p>
+<p><strong>Pourquoi <code>DbtTaskGroup</code> et pas <code>DbtDag</code> ?</strong> Cosmos propose aussi un <code>DbtDag</code> — un
+DAG complet généré par Cosmos seul. <code>DbtTaskGroup</code> est plus flexible : il permet
+d'entourer le bloc dbt de tâches Airflow natives (<code>verify_raw_source</code> avant,
+<code>publish_marts</code> après). C'est le pattern recommandé pour les pipelines hybrides.</p>
+<hr />
+<h3 id="publish_marts-le-producteur-dasset"><code>publish_marts</code> — le producteur d'Asset<a class="headerlink" href="#publish_marts-le-producteur-dasset" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nd">@task</span><span class="p">(</span><span class="n">outlets</span><span class="o">=</span><span class="p">[</span><span class="n">HR_MARTS</span><span class="p">])</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">publish_marts</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Confirm the marts were built and publish the `hr_marts` asset.&quot;&quot;&quot;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="o">.</span><span class="n">from_env</span><span class="p">()</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">marts</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="s2">&quot;fct_employees_active&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="s2">&quot;dim_departments&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        <span class="s2">&quot;fct_employee_headcount_monthly&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="p">)</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="k">with</span> <span class="n">get_warehouse</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">warehouse</span><span class="p">:</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="n">mart</span><span class="p">:</span> <span class="n">warehouse</span><span class="o">.</span><span class="n">row_count</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">marts_schema</span><span class="p">,</span> <span class="n">mart</span><span class="p">)</span> <span class="k">for</span> <span class="n">mart</span> <span class="ow">in</span> <span class="n">marts</span><span class="p">}</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="k">for</span> <span class="n">mart</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>        <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>            <span class="k">raise</span> <span class="n">AirflowException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mart </span><span class="si">{</span><span class="n">mart</span><span class="si">}</span><span class="s2"> is empty after the dbt run.&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>    <span class="k">return</span> <span class="n">counts</span>
+</code></pre></div>
+<p><strong><code>outlets=[HR_MARTS]</code></strong> — c'est le mécanisme qui déclenche <code>data_quality_hr</code>. Quand
+cette tâche se termine avec succès, Airflow marque l'Asset <code>hr_marts</code> comme mis à jour.
+Tous les DAGs schedulés sur <code>[HR_MARTS]</code> (ici <code>data_quality_hr</code>) sont alors déclenchés.</p>
+<p><strong>La validation avant publication est délibérée.</strong> Si <code>publish_marts</code> se contente de
+publier l'Asset sans vérifier, <code>data_quality_hr</code> se déclencherait même si dbt a produit
+des tables vides (bug silencieux dans un modèle). En validant que chaque mart contient
+au moins une ligne, on garantit que <code>data_quality_hr</code> ne tourne que sur des données
+réelles.</p>
+<p><strong>Si <code>publish_marts</code> échoue, <code>data_quality_hr</code> n'est pas déclenché</strong> — l'Asset n'est
+pas mis à jour. C'est le comportement souhaité : la qualité ne vérifie que les données
+que la transformation a validées.</p>
+<p><strong><code>read_only=True</code></strong> — même logique que <code>verify_raw_source</code>. Cette tâche ne lit que
+les comptages. Elle s'exécute après le <code>DbtTaskGroup</code>, quand dbt a libéré ses connexions
+d'écriture — pas de risque de contention ici, mais le flag est maintenu par cohérence
+et défense en profondeur.</p>
+<hr />
+<h3 id="dependances-et-chaine-dexecution">Dépendances et chaîne d'exécution<a class="headerlink" href="#dependances-et-chaine-dexecution" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">verify_raw_source</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="n">dbt_transform</span> <span class="o">&gt;&gt;</span> <span class="n">publish_marts</span><span class="p">()</span>
+</code></pre></div>
+<p>Trois étapes enchaînées avec l'opérateur <code>&gt;&gt;</code> (bitshift) du TaskFlow API :</p>
+<ol>
+<li><code>verify_raw_source()</code> — vérifie que la source existe et est non vide.</li>
+<li><code>dbt_transform</code> — groupe Cosmos, exécute tout le projet dbt.</li>
+<li><code>publish_marts()</code> — valide les marts et publie l'Asset.</li>
+</ol>
+<p>Si l'une échoue, les suivantes ne s'exécutent pas. C'est le comportement par défaut
+d'Airflow (<code>trigger_rule="all_success"</code>).</p>
+<hr />
+<h2 id="connexions">Connexions<a class="headerlink" href="#connexions" title="Permanent link">&para;</a></h2>
+<h3 id="upstream-ingest_hr_sources-via-raw_hr_employees">Upstream — <code>ingest_hr_sources</code> via <code>RAW_HR_EMPLOYEES</code><a class="headerlink" href="#upstream-ingest_hr_sources-via-raw_hr_employees" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>ingest_hr_sources
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    └── load_raw  @task(outlets=[RAW_HR_EMPLOYEES])
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>            │
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>            │  Asset event: raw_hr_employees updated
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>            ▼
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    transform_hr_dbt  schedule=[RAW_HR_EMPLOYEES]
+</code></pre></div>
+<p><code>transform_hr_dbt</code> ne connaît pas <code>ingest_hr_sources</code>. Il est schedulé sur l'Asset
+<code>RAW_HR_EMPLOYEES</code>. Si <code>ingest_hr_sources</code> tourne et que <code>load_raw</code> réussit, Airflow
+émet un événement Asset. Airflow 3 détecte que <code>transform_hr_dbt</code> est abonné à cet
+Asset et déclenche une nouvelle run.</p>
+<p>Avantage par rapport à un <code>ExternalTaskSensor</code> : aucun slot worker consommé en attente,
+aucun couplage sur la durée ou le schedule de l'upstream. <code>transform_hr_dbt</code> démarre
+exactement quand les données sont prêtes — ni avant ni après.</p>
+<h3 id="downstream-data_quality_hr-via-hr_marts">Downstream — <code>data_quality_hr</code> via <code>HR_MARTS</code><a class="headerlink" href="#downstream-data_quality_hr-via-hr_marts" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>transform_hr_dbt
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    └── publish_marts  @task(outlets=[HR_MARTS])
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>            │
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>            │  Asset event: hr_marts updated
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>            ▼
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    data_quality_hr  schedule=[HR_MARTS]
+</code></pre></div>
+<p>Symétrique. <code>publish_marts</code> porte <code>outlets=[HR_MARTS]</code>. Si la tâche réussit (marts
+non vides, dbt run complet), l'Asset <code>hr_marts</code> est mis à jour et <code>data_quality_hr</code>
+est déclenché.</p>
+<h3 id="vue-globale-de-la-chaine">Vue globale de la chaîne<a class="headerlink" href="#vue-globale-de-la-chaine" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart LR
+    A[ingest_hr_sources\ndaily] --&gt;|raw_hr_employees| B[transform_hr_dbt\nasset-driven]
+    B --&gt;|hr_marts| C[data_quality_hr\nasset-driven]
+    D[platform_maintenance\nweekly] -.-&gt;|housekeeping| A</code></pre>
+<hr />
+<h2 id="cosmos-deep-dive">Cosmos deep-dive<a class="headerlink" href="#cosmos-deep-dive" title="Permanent link">&para;</a></h2>
+<h3 id="ce-que-cosmos-fait-sous-le-capot">Ce que Cosmos fait sous le capot<a class="headerlink" href="#ce-que-cosmos-fait-sous-le-capot" title="Permanent link">&para;</a></h3>
+<p>Quand Python importe <code>transform_hr_dbt.py</code>, Cosmos exécute les étapes suivantes lors
+de la construction du <code>DbtTaskGroup</code> :</p>
+<ol>
+<li>
+<p><strong>Parsing du projet dbt</strong> — Cosmos lit <code>dbt_project.yml</code> et parcourt récursivement
+   les dossiers <code>models/</code>, <code>snapshots/</code>, <code>seeds/</code>, <code>tests/</code>. Il construit un graphe de
+   nœuds dbt.</p>
+</li>
+<li>
+<p><strong>Résolution du graphe de dépendances</strong> — chaque modèle dbt référençant <code>ref()</code> ou
+   <code>source()</code> crée une arête dans le graphe. Cosmos résout ces références pour construire
+   l'ordre topologique.</p>
+</li>
+<li>
+<p><strong>Génération de tâches Airflow</strong> — chaque nœud dbt devient une ou deux tâches Airflow :</p>
+</li>
+<li>Un nœud modèle génère une tâche <code>DbtRunOperator</code> (qui lance <code>dbt run --select &lt;model&gt;</code>)
+     suivie d'une tâche <code>DbtTestOperator</code> (qui lance <code>dbt test --select &lt;model&gt;</code>).</li>
+<li>Un nœud seed génère une tâche <code>DbtSeedOperator</code>.</li>
+<li>Un nœud snapshot génère une tâche <code>DbtSnapshotOperator</code>.</li>
+<li>
+<p>Les tests singuliers (<code>tests/</code>) deviennent des <code>DbtTestOperator</code> standalone.</p>
+</li>
+<li>
+<p><strong>Conversion des arêtes dbt en dépendances Airflow</strong> — si le modèle B dépend du
+   modèle A dans dbt, la tâche <code>A.run</code> précède <code>B.run</code> dans le graphe Airflow.</p>
+</li>
+</ol>
+<p>Pour le projet <code>include/dbt/</code>, Cosmos génère approximativement les tâches suivantes
+dans le groupe <code>dbt_transform</code> :</p>
+<table>
+<thead>
+<tr>
+<th>Tâche Cosmos</th>
+<th>Type</th>
+<th>Correspond à</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>department_targets.seed</code></td>
+<td><code>DbtSeedOperator</code></td>
+<td><code>seeds/department_targets.csv</code></td>
+</tr>
+<tr>
+<td><code>stg_employees.run</code></td>
+<td><code>DbtRunOperator</code></td>
+<td><code>models/staging/stg_employees.sql</code></td>
+</tr>
+<tr>
+<td><code>stg_employees.test</code></td>
+<td><code>DbtTestOperator</code></td>
+<td>Tests génériques sur <code>stg_employees</code></td>
+</tr>
+<tr>
+<td><code>int_employees_enriched.run</code></td>
+<td><code>DbtRunOperator</code></td>
+<td><code>models/intermediate/int_employees_enriched.sql</code></td>
+</tr>
+<tr>
+<td><code>snp_employees.snapshot</code></td>
+<td><code>DbtSnapshotOperator</code></td>
+<td><code>snapshots/snp_employees.sql</code></td>
+</tr>
+<tr>
+<td><code>dim_departments.run</code></td>
+<td><code>DbtRunOperator</code></td>
+<td><code>models/marts/dim_departments.sql</code></td>
+</tr>
+<tr>
+<td><code>fct_employees_active.run</code></td>
+<td><code>DbtRunOperator</code></td>
+<td><code>models/marts/fct_employees_active.sql</code></td>
+</tr>
+<tr>
+<td><code>fct_employee_headcount_monthly.run</code></td>
+<td><code>DbtRunOperator</code></td>
+<td><code>models/marts/fct_employee_headcount_monthly.sql</code></td>
+</tr>
+<tr>
+<td><code>*.test</code></td>
+<td><code>DbtTestOperator</code></td>
+<td>Tests génériques + singuliers (assert_no_future_hires)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ce-que-cosmos-nest-pas">Ce que Cosmos n'est pas<a class="headerlink" href="#ce-que-cosmos-nest-pas" title="Permanent link">&para;</a></h3>
+<p>Cosmos n'est <strong>pas</strong> un wrapper autour de <code>dbt build</code>. Il ne lance pas un processus dbt
+global. Chaque tâche Cosmos lance une commande dbt ciblée (<code>dbt run --select stg_employees</code>,
+<code>dbt test --select stg_employees</code>, etc.). dbt démarre et s'arrête pour chaque modèle.</p>
+<p>Implication : le temps total d'une run Cosmos est plus long qu'un <code>dbt build</code> unique
+à cause de l'overhead de démarrage dbt par tâche. C'est le compromis accepté (ADR-0003)
+pour obtenir la granularité d'observabilité.</p>
+<h3 id="les-modes-dexecution-cosmos">Les modes d'exécution Cosmos<a class="headerlink" href="#les-modes-dexecution-cosmos" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Comment</th>
+<th>Avantages</th>
+<th>Inconvénients</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LOCAL</code></td>
+<td>dbt appelé directement dans le worker</td>
+<td>Simple, rapide, pas d'overhead</td>
+<td>dbt partage l'env Python Airflow</td>
+</tr>
+<tr>
+<td><code>VIRTUALENV</code></td>
+<td>Cosmos crée un virtualenv par tâche</td>
+<td>Isolation totale des dépendances</td>
+<td>Plus lent (création virtualenv), plus de disque</td>
+</tr>
+<tr>
+<td><code>KUBERNETES</code></td>
+<td>Chaque tâche dans un pod K8s</td>
+<td>Scale infini, isolation parfaite</td>
+<td>Infrastructure K8s requise, latence pod startup</td>
+</tr>
+</tbody>
+</table>
+<p>Ce projet utilise <code>LOCAL</code>. L'image Docker inclut <code>astronomer-cosmos[dbt-duckdb]</code> qui
+installe dbt-core et dbt-duckdb dans le même environnement qu'Airflow. Si un conflit
+de dépendance apparaît, passer en <code>VIRTUALENV</code> est l'upgrade path naturel (ADR-0003).</p>
+<hr />
+<h2 id="le-pool-dbt">Le pool <code>dbt</code><a class="headerlink" href="#le-pool-dbt" title="Permanent link">&para;</a></h2>
+<h3 id="pourquoi-un-pool-dedie">Pourquoi un pool dédié<a class="headerlink" href="#pourquoi-un-pool-dedie" title="Permanent link">&para;</a></h3>
+<p>DuckDB est une base embarquée qui stocke tout dans un fichier unique. Sa contrainte
+fondamentale : <strong>un seul processus écrivain à la fois</strong>. Plusieurs processus peuvent lire
+simultanément, mais dès qu'un processus ouvre le fichier en écriture, tous les autres
+processus tentant d'écrire obtiennent une erreur de verrouillage.</p>
+<p>Sans pool, Cosmos pourrait lancer plusieurs tâches <code>DbtRunOperator</code> en parallèle
+(selon le nombre de slots Airflow disponibles et les dépendances dbt). Chaque tâche
+ouvrirait le fichier DuckDB en écriture. La deuxième tâche à arriver obtiendrait :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>dbt.exceptions.DbtDatabaseError: Database Error
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  IO Error: Could not set lock on file &quot;warehouse.duckdb&quot;:
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  Resource temporarily unavailable
+</code></pre></div>
+<p>Le pool <code>dbt</code> avec <code>slots=1</code> sérialise toutes les tâches du groupe Cosmos : une seule
+s'exécute à la fois, les autres attendent dans la queue du pool. Le graphe de dépendances
+dbt reste visible dans l'UI, mais l'exécution est séquentielle.</p>
+<h3 id="configuration-du-pool">Configuration du pool<a class="headerlink" href="#configuration-du-pool" title="Permanent link">&para;</a></h3>
+<p>Le pool est créé par <code>docker compose up airflow-init</code> (via la procédure d'initialisation
+qui appelle <code>airflow pools set dbt 1 "dbt serialization pool"</code>). Il est appliqué à
+toutes les tâches Cosmos via <code>operator_args={"pool": "dbt"}</code>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Dans DbtTaskGroup — appliqué à chaque tâche générée par Cosmos</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="n">operator_args</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;pool&quot;</span><span class="p">:</span> <span class="s2">&quot;dbt&quot;</span><span class="p">},</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Sans ce paramètre</p>
+<p>Si <code>operator_args={"pool": "dbt"}</code> est absent, les tâches Cosmos n'ont pas de
+pool. En local DuckDB, les premières tâches parallèles deadlockeront. L'erreur
+est claire dans les logs dbt, mais difficile à diagnostiquer si on ne connaît pas
+la contrainte DuckDB.</p>
+</div>
+<h3 id="migration-vers-bigquery">Migration vers BigQuery<a class="headerlink" href="#migration-vers-bigquery" title="Permanent link">&para;</a></h3>
+<p>Le pool <code>dbt</code> est la <strong>seule</strong> chose qui change entre DuckDB et BigQuery pour la
+parallélisation. BigQuery supporte les writes concurrentes sur des tables différentes.
+Pour exploiter le parallélisme du graphe dbt :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">-- Via l&#39;UI Airflow (Admin &gt; Pools) ou via CLI</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">airflow</span><span class="w"> </span><span class="n">pools</span><span class="w"> </span><span class="k">set</span><span class="w"> </span><span class="n">dbt</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="ss">&quot;dbt pool — BigQuery production&quot;</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Via Docker Compose exec</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>docker<span class="w"> </span>compose<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>airflow-webserver<span class="w"> </span>airflow<span class="w"> </span>pools<span class="w"> </span><span class="nb">set</span><span class="w"> </span>dbt<span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="s2">&quot;dbt pool — BigQuery&quot;</span>
+</code></pre></div>
+<p>Aucun changement de code. Le <code>operator_args={"pool": "dbt"}</code> reste, mais avec 8 slots,
+jusqu'à 8 tâches Cosmos peuvent s'exécuter simultanément — dans la limite du graphe de
+dépendances dbt.</p>
+<table>
+<thead>
+<tr>
+<th>Environnement</th>
+<th>Pool <code>dbt</code> slots</th>
+<th>Comportement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local (DuckDB)</td>
+<td>1</td>
+<td>Séquentiel — obligatoire</td>
+</tr>
+<tr>
+<td>Staging (BigQuery)</td>
+<td>4</td>
+<td>Parallélisme modéré</td>
+</tr>
+<tr>
+<td>Production (BigQuery)</td>
+<td>8–16</td>
+<td>Parallélisme maximal</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="pieges-gotchas">Pièges &amp; gotchas<a class="headerlink" href="#pieges-gotchas" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Piège</th>
+<th>Symptôme</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Oublier <code>operator_args={"pool": "dbt"}</code></td>
+<td>Deadlock DuckDB sur les premières tâches parallèles</td>
+<td>Toujours passer <code>operator_args</code> à <code>DbtTaskGroup</code></td>
+</tr>
+<tr>
+<td><code>schedule=RAW_HR_EMPLOYEES</code> sans crochets</td>
+<td>Import error : Airflow attend une cron string</td>
+<td>Toujours <code>schedule=[RAW_HR_EMPLOYEES]</code> (liste)</td>
+</tr>
+<tr>
+<td><code>max_active_runs</code> absent ou &gt; 1</td>
+<td>Deux runs simultanées → deadlock DuckDB ou données incohérentes en BigQuery</td>
+<td><code>max_active_runs=1</code> obligatoire en DuckDB</td>
+</tr>
+<tr>
+<td><code>_settings</code> capturant un env de CI sans dbt installé</td>
+<td><code>DbtTaskGroup</code> lève à la construction</td>
+<td>S'assurer que <code>DBT_PROJECT_DIR</code> existe dans l'env CI</td>
+</tr>
+<tr>
+<td>Mart vide après dbt run (bug silencieux)</td>
+<td><code>data_quality_hr</code> tourne sur des tables vides</td>
+<td><code>publish_marts</code> vérifie les comptages avant de publier l'Asset</td>
+</tr>
+<tr>
+<td><code>profiles.yml</code> avec mauvais target</td>
+<td>dbt échoue sur chaque tâche avec <code>profile not found</code></td>
+<td><code>_settings.dbt_target</code> doit correspondre à un bloc dans <code>profiles.yml</code></td>
+</tr>
+<tr>
+<td>Ajouter un nouveau mart sans mettre à jour <code>publish_marts</code></td>
+<td>Nouveau mart non vérifié, Asset publié quand même</td>
+<td>Mettre à jour le tuple <code>marts</code> dans <code>publish_marts</code></td>
+</tr>
+<tr>
+<td>Tests dbt dans un pool différent</td>
+<td>Tests et runs en parallèle sur DuckDB</td>
+<td><code>operator_args</code> s'applique à tout — seeds, runs et tests</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition tip">
+<p class="admonition-title">Déboguer un modèle Cosmos qui échoue</p>
+<p>Dans l'UI Airflow, naviguer dans le groupe <code>dbt_transform</code>, cliquer sur la tâche
+rouge (ex: <code>fct_employees_active.run</code>), puis <strong>Logs</strong>. Les logs contiennent la
+sortie complète de <code>dbt run --select fct_employees_active</code> — exactement ce qu'on
+verrait en lançant dbt manuellement. Pour rejouer ce seul modèle, utiliser
+<strong>Clear</strong> sur la tâche concernée (pas sur tout le groupe).</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Ajouter un modèle dbt : aucun changement Python nécessaire</p>
+<p>Cosmos découvre automatiquement les nouveaux fichiers SQL au prochain parse du DAG.
+Ajouter <code>models/marts/new_mart.sql</code> au projet dbt suffit — Cosmos créera la tâche
+correspondante. En revanche, si ce mart doit être vérifié par <code>publish_marts</code>,
+il faut manuellement l'ajouter au tuple <code>marts</code> dans cette tâche.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Le pool ne limite pas le parallélisme du graphe dbt visible dans l'UI</p>
+<p>Même avec <code>slots=1</code>, l'UI Airflow affiche le graphe complet avec toutes les
+dépendances. La sérialisation est une contrainte d'exécution, pas une contrainte
+de représentation. On voit le graphe complet — on attend que le slot se libère
+pour exécuter.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../dag-ingest/" class="md-footer__link md-footer__link--prev" aria-label="Previous: DAG 1 — ingest_hr_sources">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                DAG 1 — ingest_hr_sources
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../quality-engine/" class="md-footer__link md-footer__link--next" aria-label="Next: Quality engine — checks &amp; suite">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Quality engine — checks & suite
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

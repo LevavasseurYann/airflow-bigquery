@@ -1,0 +1,2708 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A production-style Apache Airflow 3 pipeline orchestrating HR analytics with dbt, asset-driven scheduling, and integrated data quality.">
+      
+      
+        <meta name="author" content="Yann Levavasseur">
+      
+      
+        <link rel="canonical" href="https://levavasseuryann.github.io/airflow-bigquery/deep-dive/quality-engine/">
+      
+      
+        <link rel="prev" href="../dag-transform/">
+      
+      
+        <link rel="next" href="../dag-quality/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Quality engine — checks & suite - airflow-bigquery</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#moteur-de-qualite-des-donnees" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="airflow-bigquery" class="md-header__button md-logo" aria-label="airflow-bigquery" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            airflow-bigquery
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Quality engine — checks & suite
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/LevavasseurYann/airflow-bigquery" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LevavasseurYann/airflow-bigquery
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../local-development/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../architecture/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Architecture
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../learning-guide/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Learning Guide
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../adr/0001-record-architecture-decisions/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  ADRs
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../config/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Deep Dive
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="airflow-bigquery" class="md-nav__button md-logo" aria-label="airflow-bigquery" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    airflow-bigquery
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/LevavasseurYann/airflow-bigquery" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    LevavasseurYann/airflow-bigquery
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../local-development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../production-gcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Production (GCP)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAGs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../data-quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../learning-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Learning Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/warehouse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    warehouse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ingestion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ingestion
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/quality-checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    quality.checks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/quality-suite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    quality.suite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/operators/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    operators
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADRs
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    ADRs
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0001-record-architecture-decisions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0001 · Record decisions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0002-airflow-3-and-asset-driven-scheduling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0002 · Airflow 3 + Assets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0003-cosmos-for-dbt-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0003 · Cosmos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0004-duckdb-local-bigquery-production/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0004 · DuckDB / BigQuery
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0005-celery-executor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0005 · CeleryExecutor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0006-sql-identifier-validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0006 · SQL Identifier Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0007-dag-parse-time-vs-run-time-configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    0007 · Parse vs Run-time
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deep Dive
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deep Dive
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config — Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../warehouse/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Warehouse — Abstraction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../assets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Assets — Asset-driven scheduling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ingestion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ingestion — extract → land → load
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dag-ingest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAG 1 — ingest_hr_sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dag-transform/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAG 2 — transform_hr_dbt
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality engine — checks & suite
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quality engine — checks & suite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-pourquoi-ce-fichier-existe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pourquoi ce fichier existe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Pourquoi ce fichier existe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#decision-architecturale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Décision architecturale
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-vue-densemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Vue d'ensemble
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-walkthrough-complet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Walkthrough complet
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Walkthrough complet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#checkspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        checks.py
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="checks.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#import-et-logger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import et logger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#severity-lenum-strenum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Severity — l'enum StrEnum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qualitycheck-la-definition-dun-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QualityCheck — la définition d'un check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#checkresult-le-resultat-dun-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CheckResult — le résultat d'un check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qualityreport-lagregat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QualityReport — l'agrégat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run_check-la-fonction-dexecution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_check() — la fonction d'exécution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run_suite-lexecution-en-lot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_suite() — l'exécution en lot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suitepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        suite.py
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="suite.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#les-constantes-de-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Les constantes de table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build_marts_quality_suite-la-factory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_marts_quality_suite() — la factory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#les-checks-error-anatomie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Les checks ERROR — anatomie
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#les-checks-warn-pourquoi-ce-niveau" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Les checks WARN — pourquoi ce niveau ?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#le-check-de-fraicheur-un-bug-potentiel-evite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Le check de fraîcheur — un bug potentiel évité
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-connexions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Connexions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-pieges-gotchas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Pièges &amp; gotchas
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dag-quality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DAG 3 — data_quality_hr
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../operator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operator — DataQualityCheckOperator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-pourquoi-ce-fichier-existe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Pourquoi ce fichier existe
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Pourquoi ce fichier existe">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#decision-architecturale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Décision architecturale
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-vue-densemble" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Vue d'ensemble
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-walkthrough-complet" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Walkthrough complet
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Walkthrough complet">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#checkspy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        checks.py
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="checks.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#import-et-logger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import et logger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#severity-lenum-strenum" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Severity — l'enum StrEnum
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qualitycheck-la-definition-dun-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QualityCheck — la définition d'un check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#checkresult-le-resultat-dun-check" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CheckResult — le résultat d'un check
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#qualityreport-lagregat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QualityReport — l'agrégat
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run_check-la-fonction-dexecution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_check() — la fonction d'exécution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run_suite-lexecution-en-lot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        run_suite() — l'exécution en lot
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#suitepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        suite.py
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="suite.py">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#les-constantes-de-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Les constantes de table
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build_marts_quality_suite-la-factory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        build_marts_quality_suite() — la factory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#les-checks-error-anatomie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Les checks ERROR — anatomie
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#les-checks-warn-pourquoi-ce-niveau" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Les checks WARN — pourquoi ce niveau ?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#le-check-de-fraicheur-un-bug-potentiel-evite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Le check de fraîcheur — un bug potentiel évité
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-connexions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Connexions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-pieges-gotchas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Pièges &amp; gotchas
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="moteur-de-qualite-des-donnees">Moteur de qualité des données<a class="headerlink" href="#moteur-de-qualite-des-donnees" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Fichiers sources</strong> : <code>src/hr_pipeline/quality/checks.py</code> · <code>src/hr_pipeline/quality/suite.py</code></p>
+</blockquote>
+<hr />
+<h2 id="1-pourquoi-ce-fichier-existe">1. Pourquoi ce fichier existe<a class="headerlink" href="#1-pourquoi-ce-fichier-existe" title="Permanent link">&para;</a></h2>
+<h3 id="decision-architecturale">Décision architecturale<a class="headerlink" href="#decision-architecturale" title="Permanent link">&para;</a></h3>
+<p>Le moteur de qualité répond à une question fondamentale : <strong>comment savoir qu'un mart est fiable ?</strong></p>
+<p>dbt offre des tests intégrés (<code>not_null</code>, <code>unique</code>, <code>relationships</code>…) qui s'exécutent pendant le build. Ces tests sont excellents mais ils ont une limite structurelle : ils sont couplés à la transformation. Si un test dbt échoue, le build s'arrête — mais il n'y a pas de registre d'audit, pas d'historique, pas de notion de "ce check a échoué 3 fois cette semaine".</p>
+<p><code>checks.py</code> et <code>suite.py</code> forment une couche indépendante — un moteur de vérification qui :</p>
+<ol>
+<li><strong>Sépare</strong> la définition d'un check (une dataclass immuable) de son exécution (une fonction pure)</li>
+<li><strong>Normalise</strong> le résultat en un format structuré JSON-sérialisable pour XCom</li>
+<li><strong>Différencie</strong> les échecs bloquants (ERROR) des avertissements non-bloquants (WARN)</li>
+<li><strong>Reste agnostique</strong> au moteur de stockage — le même objet <code>QualityCheck</code> tourne contre DuckDB ou BigQuery</li>
+</ol>
+<p>La <code>suite.py</code> est le catalogue des checks spécifiques au projet HR. Elle utilise le moteur mais n'en fait pas partie — séparation de responsabilités entre le "comment vérifier" et le "quoi vérifier".</p>
+<hr />
+<h2 id="2-vue-densemble">2. Vue d'ensemble<a class="headerlink" href="#2-vue-densemble" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>checks.py                          suite.py
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>┌──────────────────────────┐      ┌──────────────────────────────┐
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│  Severity (enum)         │      │  FCT_ACTIVE                  │
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│  QualityCheck (dataclass)│      │  DIM_DEPARTMENTS             │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│  CheckResult  (dataclass)│◄─────│  FCT_HEADCOUNT               │
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│  QualityReport(dataclass)│      │                              │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│                          │      │  build_marts_quality_suite() │
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│  run_check()             │      │  → list[QualityCheck]        │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│  run_suite()             │      └──────────────────────────────┘
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>└──────────────────────────┘
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>         ▲
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>         │  utilisé par
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>┌────────────────────────────┐
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│  DataQualityCheckOperator  │  (operators/data_quality.py)
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│  data_quality_hr (DAG)     │  (dags/data_quality_hr.py)
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>└────────────────────────────┘
+</code></pre></div>
+<p><strong>Flux de données</strong> : un <code>QualityCheck</code> entre dans <code>run_check()</code> → un <code>CheckResult</code> en sort → plusieurs <code>CheckResult</code> sont agrégés dans un <code>QualityReport</code>.</p>
+<hr />
+<h2 id="3-walkthrough-complet">3. Walkthrough complet<a class="headerlink" href="#3-walkthrough-complet" title="Permanent link">&para;</a></h2>
+<h3 id="checkspy"><code>checks.py</code><a class="headerlink" href="#checkspy" title="Permanent link">&para;</a></h3>
+<h4 id="import-et-logger">Import et logger<a class="headerlink" href="#import-et-logger" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">StrEnum</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">hr_pipeline.warehouse</span><span class="w"> </span><span class="kn">import</span> <span class="n">Warehouse</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+</code></pre></div>
+<p><code>logging.getLogger(__name__)</code> utilise le nom de module complet comme identifiant du logger (<code>hr_pipeline.quality.checks</code>). Dans Airflow, les logs de chaque task sont capturés par le logging framework. En utilisant <code>__name__</code>, les messages apparaissent avec le bon préfixe dans le logging hiérarchique de Python — on peut configurer finement le niveau de log pour ce module sans toucher aux autres.</p>
+<p><code>Warehouse</code> est importé depuis <code>hr_pipeline.warehouse</code> : c'est l'abstraction commune DuckDB/BigQuery. Le moteur de qualité ne sait pas quel backend est utilisé — il appelle <code>warehouse.fetch_scalar(sql)</code> et le polymorphisme fait le reste.</p>
+<hr />
+<h4 id="severity-lenum-strenum"><code>Severity</code> — l'enum StrEnum<a class="headerlink" href="#severity-lenum-strenum" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Severity</span><span class="p">(</span><span class="n">StrEnum</span><span class="p">):</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span>  <span class="c1"># failure fails the task (and the DAG)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="n">WARN</span> <span class="o">=</span> <span class="s2">&quot;warn&quot;</span>    <span class="c1"># failure is logged but task still succeeds</span>
+</code></pre></div>
+<p><strong>Pourquoi <code>StrEnum</code> et pas <code>Enum</code> ?</strong></p>
+<p><code>StrEnum</code> (Python 3.11+) fait en sorte que chaque membre est aussi une <code>str</code>. Concrètement :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span>      <span class="c1"># True avec StrEnum</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span>      <span class="c1"># False avec Enum normal</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nb">str</span><span class="p">(</span><span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;error&quot;</span> <span class="c1"># True dans les deux cas</span>
+</code></pre></div>
+<p>L'avantage concret ici : quand on sérialise <code>severity.value</code> dans un dict pour XCom, puis qu'on désérialise avec <code>Severity(payload["severity"])</code>, la reconstruction fonctionne sans conversion explicite. Et <code>severity.value</code> renvoie directement <code>"error"</code> ou <code>"warn"</code> — lisible dans les logs sans appeler <code>.value</code> partout.</p>
+<div class="admonition note">
+<p class="admonition-title">Comparaison avec Enum classique</p>
+<p>Avec <code>Enum</code>, <code>Severity.ERROR</code> est <code>&lt;Severity.ERROR: 'error'&gt;</code>. Dans les logs Airflow, ça produit des messages verbeux. Avec <code>StrEnum</code>, le même log affiche simplement <code>"error"</code>.</p>
+</div>
+<hr />
+<h4 id="qualitycheck-la-definition-dun-check"><code>QualityCheck</code> — la définition d'un check<a class="headerlink" href="#qualitycheck-la-definition-dun-check" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">QualityCheck</span><span class="p">:</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">sql</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">severity</span><span class="p">:</span> <span class="n">Severity</span> <span class="o">=</span> <span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span>
+</code></pre></div>
+<p><strong><code>frozen=True</code></strong> : l'instance est immuable après construction. Tenter de modifier <code>check.sql</code> après création lève une <code>FrozenInstanceError</code>. Pourquoi c'est important :</p>
+<ul>
+<li>Les checks sont construits <strong>une fois</strong> au parse time du DAG (dans <code>_QUALITY_SUITE</code>), puis réutilisés à chaque exécution de task. Si un check pouvait être muté, un bug subtil pourrait modifier le SQL en cours d'exécution dans un environnement concurrent.</li>
+<li>Immuable = thread-safe by design. Airflow exécute plusieurs tasks en parallèle.</li>
+</ul>
+<p><strong><code>slots=True</code></strong> : au lieu de stocker les attributs dans un <code>__dict__</code>, Python utilise des slots mémoire dédiés. Pour une dataclass, ça réduit l'empreinte mémoire d'environ 20-30 % et accélère l'accès aux attributs. Dans un DAG qui instancie 10 objets <code>QualityCheck</code> à chaque parse (toutes les quelques secondes), c'est un gain mesurable.</p>
+<p><strong><code>severity: Severity = Severity.ERROR</code></strong> : le défaut est ERROR, pas WARN. Philosophie "fail safe" — tout nouveau check est bloquant jusqu'à décision explicite de l'abaisser à WARN. Ça force la réflexion : "est-ce que ce check doit être un WARNING ou un vrai blocage ?"</p>
+<hr />
+<h4 id="checkresult-le-resultat-dun-check"><code>CheckResult</code> — le résultat d'un check<a class="headerlink" href="#checkresult-le-resultat-dun-check" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">CheckResult</span><span class="p">:</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">severity</span><span class="p">:</span> <span class="n">Severity</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">failing_rows</span><span class="p">:</span> <span class="nb">int</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">passed</span><span class="p">:</span> <span class="nb">bool</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>        <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>            <span class="s2">&quot;severity&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>            <span class="s2">&quot;failing_rows&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">failing_rows</span><span class="p">,</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>            <span class="s2">&quot;passed&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">passed</span><span class="p">,</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>        <span class="p">}</span>
+</code></pre></div>
+<p><strong>Pourquoi <code>CheckResult</code> répète <code>name</code>, <code>description</code>, <code>severity</code> déjà dans <code>QualityCheck</code> ?</strong></p>
+<p>Un <code>CheckResult</code> est autonome — il peut être lu dans les logs, stocké en BDD, transmis par XCom, affiché dans l'UI, <strong>sans avoir besoin de retrouver le <code>QualityCheck</code> original</strong>. Si on stockait juste <code>failing_rows</code> et <code>passed</code>, l'audit trail serait inutilisable : "check #3 a échoué avec 42 lignes" ne dit rien sans le nom et la description.</p>
+<p><strong><code>passed: bool</code></strong> est calculé à la construction (<code>failing_rows == 0</code>), mais stocké comme champ explicite. Alternative : une <code>@property</code>. Le choix du champ stocké est délibéré : le résultat est sérialisé dans XCom, et une <code>@property</code> n'est pas sérialisable directement. Avoir <code>passed</code> comme champ permet de l'inclure dans <code>as_dict()</code> et de le lire côté consommateur sans recalcul.</p>
+<p><strong><code>as_dict()</code> et la contrainte XCom</strong> : Airflow XCom sérialise les valeurs retournées par <code>execute()</code> en JSON. Les dataclasses Python ne sont pas JSON-sérialisables nativement — il faut une conversion explicite. La convention <code>as_dict()</code> sur chaque dataclass du module garantit que la sérialisation est toujours disponible et cohérente.</p>
+<div class="admonition warning">
+<p class="admonition-title">Sérialisation XCom</p>
+<p>Airflow 3 utilise un <code>ObjectSerializer</code> configurable, mais le défaut reste JSON. Si vous retournez une dataclass directement depuis <code>execute()</code>, vous obtiendrez une <code>TypeError</code> à l'exécution, pas au parse. <code>as_dict()</code> évite ce piège.</p>
+</div>
+<hr />
+<h4 id="qualityreport-lagregat"><code>QualityReport</code> — l'agrégat<a class="headerlink" href="#qualityreport-lagregat" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">slots</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">QualityReport</span><span class="p">:</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="nd">@property</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">passed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">passed</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>    <span class="nd">@property</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">blocking_failures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]:</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">]</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="nd">@property</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">warnings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]:</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span> <span class="ow">and</span> <span class="n">r</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">WARN</span><span class="p">]</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">has_blocking_failures</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocking_failures</span><span class="p">)</span>
+</code></pre></div>
+<p><strong><code>passed</code> est une <code>@property</code></strong> plutôt qu'un champ calculé à la construction. Pourquoi ? <code>QualityReport</code> est construit dans le DAG à partir des résultats XCom — à ce moment, tous les <code>CheckResult</code> sont déjà figés. La propriété exprime clairement que <code>passed</code> est <strong>dérivé</strong> des résultats, pas une valeur indépendante.</p>
+<p><strong><code>has_blocking_failures()</code></strong> est une méthode et non une propriété, contrairement à <code>blocking_failures</code>. Convention : les méthodes booléennes préfixées <code>has_</code> / <code>is_</code> sont des méthodes (pas des propriétés) dans ce codebase, pour rester cohérent avec le style "question" (<code>report.has_blocking_failures()</code> se lit comme une question, <code>report.blocking_failures</code> comme un accès à une collection).</p>
+<p><strong><code>summary()</code></strong> — le format humain :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">passed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">passed</span><span class="p">)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Data quality: </span><span class="si">{</span><span class="n">passed</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> checks passed.&quot;</span><span class="p">]</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>                <span class="sa">f</span><span class="s2">&quot;  - [</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: &quot;</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="si">}</span><span class="s2"> failing row(s) — </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">description</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>            <span class="p">)</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+</code></pre></div>
+<p>Ce format est conçu pour les logs Airflow. Exemple de sortie :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>Data quality: 8/10 checks passed.
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>  - [ERROR] fct_active__employee_id_unique: 3 failing row(s) — employee_id is the grain...
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>  - [WARN] fct_active__freshness: 1 failing row(s) — The marts must have been rebuilt...
+</code></pre></div>
+<p>Lisible dans le log viewer d'Airflow, exportable dans un message d'alerte Slack, compréhensible sans contexte.</p>
+<hr />
+<h4 id="run_check-la-fonction-dexecution"><code>run_check()</code> — la fonction d'exécution<a class="headerlink" href="#run_check-la-fonction-dexecution" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_check</span><span class="p">(</span><span class="n">warehouse</span><span class="p">:</span> <span class="n">Warehouse</span><span class="p">,</span> <span class="n">check</span><span class="p">:</span> <span class="n">QualityCheck</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CheckResult</span><span class="p">:</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">raw</span> <span class="o">=</span> <span class="n">warehouse</span><span class="o">.</span><span class="n">fetch_scalar</span><span class="p">(</span><span class="n">check</span><span class="o">.</span><span class="n">sql</span><span class="p">)</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">failing_rows</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">raw</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>    <span class="k">return</span> <span class="n">CheckResult</span><span class="p">(</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>        <span class="n">name</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>        <span class="n">description</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>        <span class="n">severity</span><span class="o">=</span><span class="n">check</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>        <span class="n">failing_rows</span><span class="o">=</span><span class="n">failing_rows</span><span class="p">,</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>        <span class="n">passed</span><span class="o">=</span><span class="n">failing_rows</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>    <span class="p">)</span>
+</code></pre></div>
+<p><strong>Le contrat SQL : retourner un entier</strong></p>
+<p>C'est le cœur de tout le système. Chaque check SQL doit retourner <strong>exactement un entier</strong> : le nombre de lignes qui violent la règle. Zéro = succès. N &gt; 0 = N lignes problématiques.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1">-- Pattern simple : COUNT des violations</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">marts</span><span class="p">.</span><span class="n">fct_employees_active</span><span class="w"> </span><span class="k">WHERE</span><span class="w"> </span><span class="n">salary</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1">-- Pattern duplicates : sous-requête pour compter les clés en double</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="p">(</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">  </span><span class="k">SELECT</span><span class="w"> </span><span class="n">employee_id</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">marts</span><span class="p">.</span><span class="n">fct_employees_active</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">  </span><span class="k">GROUP</span><span class="w"> </span><span class="k">BY</span><span class="w"> </span><span class="n">employee_id</span><span class="w"> </span><span class="k">HAVING</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="p">)</span><span class="w"> </span><span class="n">duplicated_keys</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="c1">-- Pattern inversé : table vide → retourner 1</span>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">END</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="k">FROM</span><span class="w"> </span><span class="n">marts</span><span class="p">.</span><span class="n">fct_employees_active</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">La même convention que dbt</p>
+<p>Les tests dbt (<code>not_null</code>, <code>unique</code>, etc.) compilent en SQL qui retourne le nombre de lignes en échec. Zéro = success. N &gt; 0 = test failure. En adoptant la même convention, n'importe quel développeur familier avec dbt comprend immédiatement comment écrire un check.</p>
+</div>
+<p><strong><code>int(raw or 0)</code> — la défense contre None</strong></p>
+<p><code>fetch_scalar()</code> peut retourner <code>None</code> dans deux cas :
+- La requête SQL ne renvoie aucune ligne (table vide dans la sous-requête de freshness par exemple)
+- La requête renvoie <code>NULL</code> (ex : <code>SELECT max(col) FROM table_vide</code> → <code>NULL</code>)</p>
+<p><code>None or 0</code> vaut <code>0</code> en Python. Puis <code>int(0)</code> vaut <code>0</code>. Résultat : une table vide fait passer le check plutôt que de lever une exception. Est-ce le bon comportement ? Pour la majorité des checks, oui — si la table est vide, il n'y a pas de lignes avec <code>salary &lt; 0</code>. Pour le check <code>fct_active__not_empty</code>, le SQL est justement conçu pour retourner <code>1</code> si la table est vide :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">CASE</span><span class="w"> </span><span class="k">WHEN</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">THEN</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="k">ELSE</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="k">END</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">marts</span><span class="p">.</span><span class="n">fct_employees_active</span>
+</code></pre></div>
+<p><strong><code>run_check</code> ne raise jamais</strong> — il retourne toujours un <code>CheckResult</code>. La décision de lever une exception appartient à l'opérateur Airflow, pas à cette fonction. C'est la séparation de responsabilités : le moteur calcule, l'orchestrateur décide.</p>
+<hr />
+<h4 id="run_suite-lexecution-en-lot"><code>run_suite()</code> — l'exécution en lot<a class="headerlink" href="#run_suite-lexecution-en-lot" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">run_suite</span><span class="p">(</span><span class="n">warehouse</span><span class="p">:</span> <span class="n">Warehouse</span><span class="p">,</span> <span class="n">checks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">QualityCheck</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">QualityReport</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CheckResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="k">for</span> <span class="n">check</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">:</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>        <span class="n">result</span> <span class="o">=</span> <span class="n">run_check</span><span class="p">(</span><span class="n">warehouse</span><span class="p">,</span> <span class="n">check</span><span class="p">)</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">passed</span><span class="p">:</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PASS  </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>        <span class="k">elif</span> <span class="n">check</span><span class="o">.</span><span class="n">severity</span> <span class="ow">is</span> <span class="n">Severity</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;FAIL  </span><span class="si">%s</span><span class="s2"> — </span><span class="si">%s</span><span class="s2"> failing row(s)&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="p">)</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>        <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;WARN  </span><span class="si">%s</span><span class="s2"> — </span><span class="si">%s</span><span class="s2"> failing row(s)&quot;</span><span class="p">,</span> <span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">failing_rows</span><span class="p">)</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    <span class="k">return</span> <span class="n">QualityReport</span><span class="p">(</span><span class="n">results</span><span class="o">=</span><span class="n">results</span><span class="p">)</span>
+</code></pre></div>
+<p><code>run_suite</code> n'est pas utilisée directement dans le DAG principal (qui génère des tasks individuelles), mais elle existe pour des usages hors-Airflow : scripts de validation manuelle, tests d'intégration, exécution locale en dehors du cluster.</p>
+<p>Le logging utilise des niveaux distincts selon la sévérité : <code>logger.info</code> pour les succès, <code>logger.error</code> pour les ERROR, <code>logger.warning</code> pour les WARN. Dans un système d'observabilité (Datadog, CloudWatch…), les <code>ERROR</code> remontent en alerte automatiquement.</p>
+<hr />
+<h3 id="suitepy"><code>suite.py</code><a class="headerlink" href="#suitepy" title="Permanent link">&para;</a></h3>
+<h4 id="les-constantes-de-table">Les constantes de table<a class="headerlink" href="#les-constantes-de-table" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">FCT_ACTIVE</span> <span class="o">=</span> <span class="s2">&quot;fct_employees_active&quot;</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="n">DIM_DEPARTMENTS</span> <span class="o">=</span> <span class="s2">&quot;dim_departments&quot;</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">FCT_HEADCOUNT</span> <span class="o">=</span> <span class="s2">&quot;fct_employee_headcount_monthly&quot;</span>
+</code></pre></div>
+<p>Ces constantes sont définies au niveau module, pas dans la fonction. Pourquoi ? Si le mart <code>fct_employees_active</code> est renommé en <code>fct_employees_current</code>, une seule ligne change et tous les checks de la suite sont mis à jour automatiquement. Sans cette indirection, il faudrait chercher/remplacer dans 6 SQL différents — avec le risque d'en oublier un.</p>
+<hr />
+<h4 id="build_marts_quality_suite-la-factory"><code>build_marts_quality_suite()</code> — la factory<a class="headerlink" href="#build_marts_quality_suite-la-factory" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_marts_quality_suite</span><span class="p">(</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="o">*</span><span class="p">,</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="n">marts_schema</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;marts&quot;</span><span class="p">,</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>    <span class="n">freshness_max_age_hours</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">QualityCheck</span><span class="p">]:</span>
+</code></pre></div>
+<p><strong><code>*</code> pour les keyword-only arguments</strong> : force l'appelant à nommer les paramètres. <code>build_marts_quality_suite("marts", 48)</code> est une erreur ; <code>build_marts_quality_suite(marts_schema="marts", freshness_max_age_hours=48)</code> est obligatoire. Pour une fonction publique utilisée dans un DAG, c'est une protection contre les erreurs d'ordre d'arguments.</p>
+<p><strong>Retourne une <code>list</code>, pas une classe dédiée</strong> : les checks sont des données. Une liste est le conteneur minimal, iterable, indexable, compatible avec tout. Un objet <code>QualitySuite</code> serait une abstraction prématurée — il faudrait lui ajouter des méthodes <code>.add()</code>, <code>.filter_by_severity()</code>, etc. qui ne servent pas encore.</p>
+<p><strong>Paramètre <code>marts_schema</code></strong> : permet d'exécuter la même suite contre <code>marts</code> (DuckDB local) ou <code>my_project.marts</code> (BigQuery). Le DAG passe <code>os.getenv("BQ_DATASET_MARTS", "marts")</code> — la suite elle-même ne sait pas d'où vient la valeur.</p>
+<hr />
+<h4 id="les-checks-error-anatomie">Les checks ERROR — anatomie<a class="headerlink" href="#les-checks-error-anatomie" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>SQL pattern</th>
+<th>Règle métier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>employee_id_not_null</code></td>
+<td><code>WHERE col IS NULL</code></td>
+<td>Intégrité de la clé primaire</td>
+</tr>
+<tr>
+<td><code>employee_id_unique</code></td>
+<td><code>GROUP BY … HAVING count(*) &gt; 1</code></td>
+<td>Grain de la fact table</td>
+</tr>
+<tr>
+<td><code>salary_non_negative</code></td>
+<td><code>WHERE salary &lt; 0</code></td>
+<td>Contrainte domaine</td>
+</tr>
+<tr>
+<td><code>no_future_hire_dates</code></td>
+<td><code>WHERE hire_date &gt; CURRENT_DATE</code></td>
+<td>Règle métier RH</td>
+</tr>
+<tr>
+<td><code>years_of_service_non_negative</code></td>
+<td><code>WHERE years_of_service &lt; 0</code></td>
+<td>Dérivé cohérent</td>
+</tr>
+<tr>
+<td><code>department_referential_integrity</code></td>
+<td><code>LEFT JOIN … WHERE d.dept IS NULL</code></td>
+<td>Intégrité référentielle</td>
+</tr>
+<tr>
+<td><code>dim_departments__department_unique</code></td>
+<td><code>GROUP BY … HAVING count(*) &gt; 1</code></td>
+<td>Grain de la dimension</td>
+</tr>
+<tr>
+<td><code>headcount__non_negative</code></td>
+<td><code>WHERE headcount &lt; 0</code></td>
+<td>Impossible physiquement</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Le pattern LEFT JOIN pour l'intégrité référentielle :</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">SELECT</span><span class="w"> </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">FROM</span><span class="w"> </span><span class="n">marts</span><span class="p">.</span><span class="n">fct_employees_active</span><span class="w"> </span><span class="n">f</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">  </span><span class="k">LEFT</span><span class="w"> </span><span class="k">JOIN</span><span class="w"> </span><span class="n">marts</span><span class="p">.</span><span class="n">dim_departments</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="k">ON</span><span class="w"> </span><span class="n">f</span><span class="p">.</span><span class="n">department</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">department</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">  </span><span class="k">WHERE</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">department</span><span class="w"> </span><span class="k">IS</span><span class="w"> </span><span class="k">NULL</span>
+</code></pre></div>
+<p>Un <code>INNER JOIN</code> retournerait les lignes qui ont une correspondance. Un <code>LEFT JOIN</code> garde <strong>toutes</strong> les lignes de <code>fct_employees_active</code>, même celles sans correspondance dans <code>dim_departments</code>. Le <code>WHERE d.department IS NULL</code> filtre justement ces orphelines — c'est le pattern standard pour détecter des violations de clé étrangère en SQL analytique.</p>
+<div class="admonition tip">
+<p class="admonition-title">Pourquoi pas une contrainte FK en base ?</p>
+<p>DuckDB et BigQuery ne font pas respecter les contraintes de clé étrangère au niveau du moteur. Les FK sont déclaratives (pour la documentation / l'optimisation de requêtes) mais pas enforced. Un check SQL explicite est la seule façon de détecter ces violations.</p>
+</div>
+<hr />
+<h4 id="les-checks-warn-pourquoi-ce-niveau">Les checks WARN — pourquoi ce niveau ?<a class="headerlink" href="#les-checks-warn-pourquoi-ce-niveau" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">QualityCheck</span><span class="p">(</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;fct_active__not_empty&quot;</span><span class="p">,</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="o">...</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="n">severity</span><span class="o">=</span><span class="n">Severity</span><span class="o">.</span><span class="n">WARN</span><span class="p">,</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="p">),</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="n">QualityCheck</span><span class="p">(</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;fct_active__freshness&quot;</span><span class="p">,</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    <span class="o">...</span>
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>    <span class="n">severity</span><span class="o">=</span><span class="n">Severity</span><span class="o">.</span><span class="n">WARN</span><span class="p">,</span>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="p">),</span>
+</code></pre></div>
+<p><strong><code>fct_active__not_empty</code> est WARN</strong> parce qu'une table vide peut avoir une explication légitime : premier déploiement, environnement de test, régression connue en cours de correction. Fail le DAG automatiquement pour une table vide empêcherait les builds de passer en CI. Le WARN alerte sans bloquer.</p>
+<p><strong><code>fct_active__freshness</code> est WARN</strong> : si les marts ont été buildés il y a 25h au lieu de 24h (un pipeline qui a pris du retard), le DAG de qualité ne doit pas re-fail et créer du bruit d'alerte en cascade. La fraîcheur est une métrique de monitoring, pas un critère bloquant.</p>
+<hr />
+<h4 id="le-check-de-fraicheur-un-bug-potentiel-evite">Le check de fraîcheur — un bug potentiel évité<a class="headerlink" href="#le-check-de-fraicheur-un-bug-potentiel-evite" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">sql</span><span class="o">=</span><span class="p">(</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>    <span class="sa">f</span><span class="s2">&quot;SELECT count(*) FROM (&quot;</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>    <span class="sa">f</span><span class="s2">&quot;  SELECT max(dbt_loaded_at) AS last_loaded_at FROM </span><span class="si">{</span><span class="n">fct</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>    <span class="sa">f</span><span class="s2">&quot;) latest&quot;</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>    <span class="sa">f</span><span class="s2">&quot;  WHERE last_loaded_at IS NULL&quot;</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>    <span class="sa">f</span><span class="s2">&quot;  OR CAST(last_loaded_at AS TIMESTAMP)&quot;</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>    <span class="sa">f</span><span class="s2">&quot;   &lt; CURRENT_TIMESTAMP - INTERVAL &#39;</span><span class="si">{</span><span class="n">freshness_max_age_hours</span><span class="si">}</span><span class="s2">&#39; HOUR&quot;</span>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="p">),</span>
+</code></pre></div>
+<p><strong>Le piège du timestamp figé</strong></p>
+<p>Mauvaise implémentation (ne pas faire) :</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="n">threshold</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">freshness_max_age_hours</span><span class="p">)</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;SELECT count(*) FROM ... WHERE last_loaded_at &lt; &#39;</span><span class="si">{</span><span class="n">threshold</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+</code></pre></div>
+<p>Problème : <code>build_marts_quality_suite()</code> est appelée <strong>au parse time</strong> du DAG (dans <code>_QUALITY_SUITE</code>). Le processeur Airflow parse les DAGs toutes les quelques secondes et met les modules en cache. Si le module est en cache, <code>datetime.now()</code> est appelé une seule fois et la valeur est figée dans le SQL. La "fraîcheur" serait comparée à un timestamp de plusieurs heures ou jours — le check serait toujours en échec ou jamais en échec selon le timing.</p>
+<p><strong>La bonne approche</strong> : <code>CURRENT_TIMESTAMP</code> est une fonction SQL évaluée par le moteur de base de données <strong>au moment où la requête s'exécute</strong>, pas au moment où la chaîne SQL est construite. Le SQL est une chaîne statique (safe au cache), l'évaluation temporelle est dynamique.</p>
+<p><strong><code>CAST(last_loaded_at AS TIMESTAMP)</code></strong> : <code>dbt_loaded_at</code> est de type <code>timestamptz</code> (timestamp with timezone) dans DuckDB et <code>TIMESTAMP</code> dans BigQuery — deux types différents. Le <code>CAST</code> normalise pour que la comparaison avec <code>CURRENT_TIMESTAMP</code> fonctionne dans les deux backends sans erreur de type.</p>
+<p><strong><code>OR last_loaded_at IS NULL</code></strong> : si <code>max(dbt_loaded_at)</code> retourne NULL (table vide ou colonne jamais remplie), la comparaison <code>NULL &lt; CURRENT_TIMESTAMP - INTERVAL '24' HOUR</code> est <code>NULL</code> (pas <code>TRUE</code> en SQL). La clause <code>OR IS NULL</code> rend le check explicitement non-frais quand la colonne n'a pas de valeur.</p>
+<hr />
+<h2 id="4-connexions">4. Connexions<a class="headerlink" href="#4-connexions" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a>suite.py
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>  └── build_marts_quality_suite()
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>        │ retourne list[QualityCheck]
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>        ▼
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>dags/data_quality_hr.py
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>  └── _QUALITY_SUITE (parse time)
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>        │ itération → DataQualityCheckOperator(quality_check=check)
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>        ▼
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>operators/data_quality.py
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>  └── DataQualityCheckOperator.execute()
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>        └── run_check(warehouse, check)  ← checks.py
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>              └── warehouse.fetch_scalar(check.sql)
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>                    └── DuckDBWarehouse ou BigQueryWarehouse  ← warehouse.py
+</code></pre></div>
+<p><strong><code>include/dbt/</code></strong> : dbt teste les mêmes contraintes pendant le build (<code>not_null</code>, <code>unique</code>, <code>relationships</code>). Cette suite les re-vérifie après coup pour produire un audit trail indépendant. Les deux couches se complètent : dbt bloque la promotion d'un modèle défaillant, ce moteur enregistre l'état des marts après publication.</p>
+<hr />
+<h2 id="5-pieges-gotchas">5. Pièges &amp; gotchas<a class="headerlink" href="#5-pieges-gotchas" title="Permanent link">&para;</a></h2>
+<div class="admonition danger">
+<p class="admonition-title">SQL retournant plusieurs lignes</p>
+<p>Si le SQL d'un check retourne plusieurs lignes (erreur de requête), <code>fetch_scalar()</code> ne prend que la première valeur. Le check peut passer ou échouer de façon aléatoire selon l'ordre retourné. Tous les checks de la suite utilisent <code>SELECT count(*)</code> ou une sous-requête qui garantit une seule ligne.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Le type de retour de <code>fetch_scalar()</code></p>
+<p><code>fetch_scalar()</code> retourne un <code>Any</code>. Sur BigQuery, les entiers peuvent être retournés comme <code>Decimal</code> ou <code>int64</code> selon la version du client. Le <code>int(raw or 0)</code> dans <code>run_check()</code> normalise explicitement en <code>int</code> Python. Si vous utilisez <code>raw == 0</code> sans cast, une comparaison <code>Decimal('0') == 0</code> peut être surprenante.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Ordre des checks dans la suite</p>
+<p>Les checks sont retournés dans l'ordre de la liste. Dans le DAG, ils sont convertis en tâches Airflow indépendantes (pas de dépendances entre elles). L'ordre dans la liste ne garantit pas l'ordre d'exécution. Si deux checks sont logiquement dépendants (ex : vérifier l'unicité avant l'intégrité référentielle), c'est acceptable ici car un échec d'unicité ne crashe pas les autres checks — ils s'exécutent tous.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Ajouter un check</p>
+<ol>
+<li>Écrire le SQL sur la base de données (DuckDB ou BigQuery) et vérifier qu'il retourne 0 sur des données propres</li>
+<li>Ajouter un <code>QualityCheck(...)</code> dans <code>build_marts_quality_suite()</code></li>
+<li>Décider <code>Severity.ERROR</code> ou <code>Severity.WARN</code> — le défaut est ERROR</li>
+<li><code>pytest -m "not dags"</code> pour vérifier que les tests passent</li>
+<li>Le nouveau check apparaîtra automatiquement dans le DAG comme une nouvelle tâche <code>check__&lt;name&gt;</code></li>
+</ol>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Tests unitaires de la suite</p>
+<p><code>tests/test_quality.py</code> teste <code>run_check()</code> et <code>run_suite()</code> avec un warehouse DuckDB en mémoire. La suite entière peut être testée localement sans Airflow ni BigQuery. Voir la section Tests de la documentation pour les patterns de mock.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../dag-transform/" class="md-footer__link md-footer__link--prev" aria-label="Previous: DAG 2 — transform_hr_dbt">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                DAG 2 — transform_hr_dbt
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../dag-quality/" class="md-footer__link md-footer__link--next" aria-label="Next: DAG 3 — data_quality_hr">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                DAG 3 — data_quality_hr
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
