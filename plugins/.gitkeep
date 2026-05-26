@@ -1,0 +1,2 @@
+# Airflow plugins folder. Custom operators live in src/hr_pipeline/operators/
+# (a proper package) rather than here — kept only so the bind mount has a target.

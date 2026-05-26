@@ -1,0 +1,85 @@
+# _schema.yml — documentation + tests for the mart layer.
+#
+# Every consumer-facing column is documented: `dbt docs generate` turns these
+# descriptions into a searchable data catalogue.
+version: 2
+
+models:
+
+  - name: fct_employees_active
+    description: >
+      Incremental fact table — one row per currently active employee, rebuilt
+      using updated_at as the watermark.
+    columns:
+      - name: employee_sk
+        description: Surrogate key inherited from staging.
+        data_tests:
+          - not_null
+      - name: employee_id
+        description: Natural employee identifier. Grain of this table.
+        data_tests:
+          - not_null
+          - unique
+      - name: email
+        description: Lowercased work email address.
+        data_tests:
+          - not_null
+      - name: hire_date
+        description: Date the employee was hired.
+        data_tests:
+          - not_null
+      - name: department
+        description: Lowercased department name.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_departments')
+                field: department
+      - name: salary
+        description: Annual gross salary (numeric).
+        data_tests:
+          - non_negative
+      - name: salary_vs_target
+        description: Salary classification against the department target.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['above_target', 'below_target', 'no_target']
+      - name: years_of_service
+        description: Whole years between hire_date and today.
+        data_tests:
+          - non_negative
+      - name: dbt_loaded_at
+        description: Timestamp when dbt last wrote the row (freshness signal).
+        data_tests:
+          - not_null
+
+  - name: dim_departments
+    description: Department dimension enriched with seeded planning targets.
+    columns:
+      - name: department_sk
+        description: Surrogate key of the department.
+        data_tests:
+          - unique
+          - not_null
+      - name: department
+        description: Canonical lowercased department name.
+        data_tests:
+          - unique
+          - not_null
+
+  - name: fct_employee_headcount_monthly
+    description: Aggregated monthly active headcount by department.
+    columns:
+      - name: hired_month
+        description: Month bucket derived from hire_date.
+        data_tests:
+          - not_null
+      - name: department
+        description: Department group.
+        data_tests:
+          - not_null
+      - name: headcount
+        description: Distinct count of active employees.
+        data_tests:
+          - non_negative

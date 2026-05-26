@@ -1,0 +1,71 @@
+# ============================================================================
+# Project metadata + tooling configuration.
+#
+# `hr_pipeline` is a small, importable Python package (src/ layout) holding the
+# reusable logic the DAGs orchestrate: warehouse access, ingestion and data
+# quality. Keeping it out of dags/ makes it unit-testable WITHOUT Airflow.
+# ============================================================================
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hr-pipeline"
+version = "1.0.0"
+description = "Reusable orchestration library for the airflow-bigquery HR data platform."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Yann Levavasseur" }]
+keywords = ["airflow", "dbt", "bigquery", "duckdb", "data-engineering"]
+
+dependencies = [
+    "duckdb>=1.1.0",
+    "pandas>=2.1.0",
+    "pyarrow>=16.0.0",  # Parquet landing zone in the ingestion step
+]
+
+[project.optional-dependencies]
+# Installed only when targeting the production warehouse.
+bigquery = ["google-cloud-bigquery>=3.25.0", "pandas-gbq>=0.23.0"]
+# Local developer tooling (lint, type-check, tests).
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.6.0", "mypy>=1.11"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ─── Ruff: linter + formatter ───────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "dags", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"dags/*" = ["E402"]   # DAG files may import after a module-level docstring/const
+
+[tool.ruff.lint.isort]
+# `common` is the in-repo DAG helper module — group it with first-party code.
+known-first-party = ["hr_pipeline", "common"]
+
+# ─── Mypy: static typing ────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.12"
+packages = ["hr_pipeline"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+
+# ─── Pytest ─────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers"
+pythonpath = ["src", "."]
+markers = [
+    "dags: tests that import and validate the Airflow DAG bag",
+]
+filterwarnings = ["ignore::DeprecationWarning"]

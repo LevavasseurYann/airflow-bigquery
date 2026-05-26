@@ -1,0 +1,21 @@
+version: 2
+
+seeds:
+  - name: department_targets
+    description: >
+      Static, business-owned department planning targets (average salary and
+      headcount). Versioned in git and loaded as a table by `dbt seed`.
+    columns:
+      - name: department
+        description: Canonical lowercased department name.
+        data_tests:
+          - not_null
+          - unique
+      - name: target_avg_salary
+        description: Target average annual salary for the department.
+        data_tests:
+          - non_negative
+      - name: target_headcount
+        description: Target headcount for the department.
+        data_tests:
+          - non_negative

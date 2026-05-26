@@ -1,0 +1,12 @@
+version: 2
+
+snapshots:
+  - name: snp_employees
+    description: >
+      SCD2 history of employee records. dbt adds dbt_valid_from / dbt_valid_to
+      columns delimiting the period each version of a row was current.
+    columns:
+      - name: employee_id
+        description: Natural employee identifier (not unique — one row per version).
+        data_tests:
+          - not_null

@@ -1,0 +1,39 @@
+# _sources.yml — declares the raw input the dbt project did NOT create.
+#
+# The raw_hr.employees table is produced by the `ingest_hr_sources` Airflow DAG.
+# Declaring it as a source gives us three things:
+#   1. lineage   — {{ source() }} wires raw → staging into the dbt DAG;
+#   2. freshness — `dbt source freshness` alerts when the data goes stale;
+#   3. tests     — assertions run on the raw table before any transformation.
+version: 2
+
+sources:
+  - name: raw_hr
+    description: >
+      Raw HR data landed by the airflow-bigquery ingestion pipeline. One
+      consolidated table built from the per-region CSV extracts. No casting or
+      business logic applied yet.
+    schema: raw_hr
+
+    # Freshness is measured against the audit column the ingestion step adds.
+    loaded_at_field: _ingested_at
+    freshness:
+      warn_after: { count: 12, period: hour }
+      error_after: { count: 24, period: hour }
+
+    tables:
+      - name: employees
+        description: One row per employee, consolidated from regional HRIS extracts.
+        columns:
+          - name: employee_id
+            description: Natural key from the source HRIS.
+            data_tests:
+              - not_null
+          - name: email
+            description: Employee work email — may carry inconsistent casing.
+            data_tests:
+              - not_null
+          - name: updated_at
+            description: Source-system timestamp of the last record change.
+            data_tests:
+              - not_null

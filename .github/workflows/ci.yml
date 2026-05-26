@@ -1,0 +1,91 @@
+# ============================================================================
+# Continuous Integration.
+#
+# Four independent jobs, each proving one layer of the project:
+#   lint            — ruff lint + format check
+#   unit-tests      — fast, hermetic pytest of the hr_pipeline package
+#   dbt-build       — runs the embedded dbt project end to end on DuckDB
+#   dag-validation  — parses every DAG through a DagBag (Airflow + Cosmos)
+# ============================================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install ruff==0.8.4
+      - name: ruff check
+        run: ruff check src dags tests scripts
+      - name: ruff format --check
+        run: ruff format --check src dags tests scripts
+
+  unit-tests:
+    name: Unit tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install hr_pipeline with dev extras
+        run: pip install -e ".[dev]"
+      - name: Run the unit suite (Airflow-free)
+        run: pytest -m "not dags" --cov=hr_pipeline --cov-report=term-missing
+
+  dbt-build:
+    name: dbt build (DuckDB)
+    runs-on: ubuntu-latest
+    env:
+      HR_ENV: local
+      HR_RAW_DATA_DIR: ${{ github.workspace }}/include/data/raw
+      DUCKDB_PATH: ${{ github.workspace }}/include/data/ci_warehouse.duckdb
+      DBT_TARGET: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install hr_pipeline + dbt
+        run: pip install -e . "dbt-core>=1.9,<2.0" "dbt-duckdb>=1.9,<2.0"
+      - name: Seed raw_hr.employees (runs the real ingestion logic)
+        run: python scripts/seed_local_warehouse.py
+      - name: dbt build — run + test every model, seed, snapshot
+        run: dbt build --project-dir include/dbt --profiles-dir include/dbt
+      - name: dbt source freshness
+        run: dbt source freshness --project-dir include/dbt --profiles-dir include/dbt
+
+  dag-validation:
+    name: DAG validation (Airflow 3 + Cosmos)
+    runs-on: ubuntu-latest
+    env:
+      HR_ENV: local
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install Apache Airflow 3.1 (with the official constraints)
+        run: |
+          pip install "apache-airflow==3.1.0" \
+            --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-3.1.0/constraints-3.12.txt"
+      - name: Install Cosmos + the hr_pipeline package
+        run: |
+          pip install "astronomer-cosmos[dbt-duckdb]>=1.8,<2.0"
+          pip install -e .
+      - name: Parse and validate the DAG bag
+        run: pytest -m dags -v

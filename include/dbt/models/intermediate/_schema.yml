@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: int_employees_enriched
+    description: >
+      Ephemeral enrichment model joining staged employees to the seeded
+      department planning targets. Shared base for the mart layer.
+    columns:
+      - name: employee_sk
+        description: Surrogate key inherited from staging.
+        data_tests:
+          - not_null
+      - name: salary_vs_target
+        description: Salary classification against the department target.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['above_target', 'below_target', 'no_target']

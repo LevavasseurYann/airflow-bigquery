@@ -1,0 +1,44 @@
+# _schema.yml — documentation + tests for the staging layer.
+version: 2
+
+models:
+  - name: stg_employees
+    description: >
+      Cleaned and type-cast employee records sourced from raw_hr.employees.
+      One row per employee. No business logic — use the mart models for that.
+    columns:
+
+      - name: employee_sk
+        description: Deterministic hash surrogate key (employee_id + email).
+        data_tests:
+          - unique
+          - not_null
+
+      - name: employee_id
+        description: Natural employee identifier, cast to string.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: email
+        description: Lowercased, trimmed work email address.
+        data_tests:
+          - not_null
+
+      - name: updated_at
+        description: Timestamp of the last source-system change (incremental watermark).
+        data_tests:
+          - not_null
+
+      - name: is_active
+        description: Boolean — true when the employee is currently employed.
+        data_tests:
+          - not_null
+
+      - name: department
+        description: Lowercased department name; blanks bucketed to 'unknown'.
+
+      - name: salary
+        description: Annual gross salary (numeric, exact precision).
+        data_tests:
+          - non_negative   # custom generic test, see macros/test_non_negative.sql

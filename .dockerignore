@@ -1,0 +1,21 @@
+# Keep the Docker build context small and reproducible.
+# The Dockerfile only needs requirements, project metadata and the src package.
+.git
+.github
+docs
+tests
+logs
+*.md
+!README.md
+.env
+.venv
+venv
+__pycache__
+.pytest_cache
+.ruff_cache
+.mypy_cache
+*.duckdb
+*.duckdb.wal
+include/dbt/target
+include/dbt/dbt_packages
+include/dbt/logs

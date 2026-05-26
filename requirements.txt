@@ -1,0 +1,24 @@
+# ============================================================================
+# Python dependencies installed INTO the Airflow image (see Dockerfile).
+#
+# Pinning strategy: lower bound on the minor version we develop against, upper
+# bound on the next major to stay safe against breaking changes. The Docker
+# image already pins Apache Airflow itself (apache/airflow:3.1.0).
+# ============================================================================
+
+# ─── Airflow providers ──────────────────────────────────────────────────────
+apache-airflow-providers-google>=12.0.0       # BigQuery / GCS hooks & operators
+apache-airflow-providers-fab>=2.0.0           # FAB auth manager (web UI login)
+apache-airflow-providers-celery>=3.10.0       # CeleryExecutor backend
+
+# ─── dbt orchestration ──────────────────────────────────────────────────────
+# Cosmos renders the embedded dbt project as a native Airflow task graph.
+# The [dbt-duckdb] extra co-installs dbt-core + the DuckDB adapter so that
+# Cosmos can run dbt in LOCAL execution mode (see docs/adr/0003-*).
+astronomer-cosmos[dbt-duckdb]>=1.8.0,<2.0.0
+dbt-bigquery>=1.9.0,<2.0.0                    # production warehouse adapter
+
+# ─── Warehouse & data handling (used by the hr_pipeline package) ────────────
+duckdb>=1.1.0
+pandas>=2.1.0
+pyarrow>=16.0.0

@@ -1,0 +1,9 @@
+employee_id,email,hire_date,updated_at,is_active,department,salary
+E2001,jack.thompson@example.com,2020-04-27,2026-05-20 12:00:00,true,Engineering,128000
+E2002,karen.davis@example.com,2019-10-08,2026-05-19 15:15:00,true,Sales,99000
+E2003,liam.wilson@example.com,2022-12-01,2026-05-21 09:40:00,true,Finance,112000
+E2004,mia.garcia@example.com,2023-03-17,2026-05-20 17:10:00,false,Marketing,70000
+E2005,noah.miller@example.com,2018-01-29,2026-05-18 08:25:00,true,Engineering,134000
+E2006,olivia.brown@example.com,2021-06-11,2026-05-19 19:00:00,true,HR,81000
+E2007,peter.jones@example.com,2024-09-23,2026-05-20 10:30:00,true,Sales,67000
+E1004,david.rousseau@example.com,2017-11-22,2026-05-22 06:00:00,true,Finance,108000

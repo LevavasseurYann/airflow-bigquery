@@ -1,0 +1,35 @@
+# ============================================================================
+# profiles.yml — database connections for the embedded dbt project.
+#
+# Kept inside the repo ON PURPOSE: it contains no secrets. Every value is read
+# from an environment variable with a safe default, so `dbt` and Cosmos both
+# work with zero configuration locally. Credentials (the BigQuery key) are
+# injected at runtime, never stored here.
+#
+# Target selection:
+#   * dev  → DuckDB   (HR_ENV=local,      the default)
+#   * prod → BigQuery (HR_ENV=production, see docs/production-gcp.md)
+# ============================================================================
+hr_analytics:
+  target: "{{ env_var('DBT_TARGET', 'dev') }}"
+
+  outputs:
+
+    # ── Development: local DuckDB file ──────────────────────────────────────
+    dev:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', '/opt/airflow/include/data/warehouse.duckdb') }}"
+      schema: main
+      # DuckDB allows a single writer — one dbt thread avoids self-contention.
+      threads: 1
+
+    # ── Production: Google BigQuery ─────────────────────────────────────────
+    prod:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('GCP_PROJECT', 'set-me-in-production') }}"
+      dataset: "{{ env_var('BQ_DATASET_ANALYTICS', 'hr_analytics') }}"
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS', '/dev/null') }}"
+      location: "{{ env_var('BQ_LOCATION', 'EU') }}"
+      threads: 4
+      timeout_seconds: 600

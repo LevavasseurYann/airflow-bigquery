@@ -1,0 +1,66 @@
+# ============================================================================
+# hr_analytics — embedded dbt project.
+#
+# This is a self-contained, ZERO-dependency dbt project (no packages.yml). It
+# is intentionally portable: every model uses dbt's cross-database macros so the
+# exact same SQL compiles on DuckDB (local) and BigQuery (production).
+#
+# It is a companion to the sibling `dbt-bigquery` repo: same HR domain, same
+# model names. That repo goes deeper on BigQuery-specific features (contracts,
+# partitioning, dbt_utils); this one stays portable so the whole Airflow
+# pipeline runs on a laptop with no cloud account.
+# ============================================================================
+name: 'hr_analytics'
+version: '1.0.0'
+config-version: 2
+require-dbt-version: ">=1.9.0"
+
+# Maps to the profile block in profiles.yml (same directory).
+profile: 'hr_analytics'
+
+model-paths:    ["models"]
+seed-paths:     ["seeds"]
+test-paths:     ["tests"]
+macro-paths:    ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# Stamped onto every compiled query — invaluable when reading warehouse logs.
+query-comment:
+  comment: "app=airflow-bigquery invocation={{ invocation_id }} target={{ target.name }}"
+  append: true
+
+# Overridable from Airflow via `dbt build --vars` or the var() default.
+vars:
+  active_employee_salary_floor: 0
+
+# ── Model configuration ─────────────────────────────────────────────────────
+# Defaults cascade per layer (project < folder < model). Materialisation
+# follows the layer: staging = view, intermediate = ephemeral, marts = table.
+models:
+  hr_analytics:
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ['staging']
+    intermediate:
+      +materialized: ephemeral
+      +tags: ['intermediate']
+    marts:
+      +materialized: table
+      +schema: marts
+      +tags: ['marts']
+
+seeds:
+  hr_analytics:
+    +schema: seed
+    +quote_columns: false
+
+snapshots:
+  hr_analytics:
+    +target_schema: snapshots
