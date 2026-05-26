@@ -36,6 +36,12 @@ x-airflow-common:
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # Loads config/airflow_local_settings.py — our cluster policies live there.
+    # AIRFLOW_CONFIG points to the main Airflow config file (airflow.cfg).
+    # Airflow creates it on first boot if absent (via `airflow config list` in
+    # airflow-init). This is NOT how airflow_local_settings.py is discovered:
+    # Airflow auto-loads that file from $AIRFLOW_HOME/config/ (i.e.
+    # /opt/airflow/config/), which is mounted below — no extra configuration
+    # is required for cluster policies to take effect.
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
     # ── hr_pipeline runtime configuration ──────────────────────────────────
     HR_ENV: ${HR_ENV:-local}
@@ -188,6 +194,13 @@ services:
           echo
           echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
           echo "If you are on Linux, set AIRFLOW_UID=$$(id -u) in your .env file."
+          echo
+        fi
+        if [[ -z "${AIRFLOW__CORE__FERNET_KEY}" ]]; then
+          echo
+          echo -e "\033[1;33mWARNING!!!: AIRFLOW__CORE__FERNET_KEY is not set.\e[0m"
+          echo "Connections and Variables will be stored unencrypted. Fine for local dev only."
+          echo "Generate a key:  python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
           echo
         fi
         one_meg=1048576

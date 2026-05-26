@@ -28,6 +28,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-lint-${{ hashFiles('pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-lint-
       - run: pip install ruff==0.8.4
       - name: ruff check
         run: ruff check src dags tests scripts
@@ -42,6 +47,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-unit-${{ hashFiles('pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-unit-
       - name: Install hr_pipeline with dev extras
         run: pip install -e ".[dev]"
       - name: Run the unit suite (Airflow-free)
@@ -60,6 +70,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-dbt-${{ hashFiles('pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-dbt-
       - name: Install hr_pipeline + dbt
         run: pip install -e . "dbt-core>=1.9,<2.0" "dbt-duckdb>=1.9,<2.0"
       - name: Seed raw_hr.employees (runs the real ingestion logic)
@@ -79,6 +94,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      # Airflow 3.1 + Cosmos is the heaviest install (~500 MB). Cache it
+      # keyed on the Airflow version so a version bump busts the cache.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-airflow-3.1.0-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-airflow-3.1.0-
+            ${{ runner.os }}-pip-airflow-
       - name: Install Apache Airflow 3.1 (with the official constraints)
         run: |
           pip install "apache-airflow==3.1.0" \

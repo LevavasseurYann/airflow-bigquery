@@ -72,6 +72,17 @@ def test_extract_rejects_missing_required_column(tmp_path):
         extract_to_parquet(SourceFile.from_path(bad), tmp_path / "_staging")
 
 
+def test_extract_rejects_null_employee_id(tmp_path):
+    bad = tmp_path / "employees_eu.csv"
+    # Null employee_id — the natural key required for deduplication.
+    bad.write_text(
+        f"{_HEADER}\n,a@x.com,2020-01-01,2026-05-20 10:00:00,true,sales,50000\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(IngestionError, match="null employee_id"):
+        extract_to_parquet(SourceFile.from_path(bad), tmp_path / "_staging")
+
+
 def test_load_raw_employees_deduplicates_last_write_wins(tmp_path, duckdb_warehouse):
     raw = tmp_path / "raw"
     raw.mkdir()

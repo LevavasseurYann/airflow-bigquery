@@ -3,12 +3,11 @@
 -- Incremental materialisation processes only rows whose updated_at is newer
 -- than what is already in the table, instead of rebuilding everything.
 --
--- The incremental strategy is chosen per warehouse:
---   * BigQuery → 'merge'         (native MERGE, ideal for upserts)
---   * DuckDB   → 'delete+insert'  (the portable strategy the adapter supports)
---
--- Partitioning / clustering are BigQuery-only cost levers, applied conditionally
--- so the same file still compiles on DuckDB.
+-- All warehouse-specific settings live in a single config() block:
+--   * incremental_strategy — BigQuery uses native MERGE; DuckDB uses
+--     delete+insert (the portable strategy the adapter supports).
+--   * partition_by / cluster_by — BigQuery-only cost levers; `none` is
+--     ignored by all other adapters so the file compiles unchanged on DuckDB.
 --
 -- Force a full rebuild with:  dbt run --full-refresh -s fct_employees_active
 
@@ -16,17 +15,12 @@
     config(
         materialized='incremental',
         unique_key='employee_id',
-        incremental_strategy=('merge' if target.type == 'bigquery' else 'delete+insert'),
-        on_schema_change='sync_all_columns'
+        incremental_strategy='merge' if target.type == 'bigquery' else 'delete+insert',
+        on_schema_change='sync_all_columns',
+        partition_by={'field': 'hire_date', 'data_type': 'date', 'granularity': 'month'} if target.type == 'bigquery' else none,
+        cluster_by=['department'] if target.type == 'bigquery' else none
     )
 }}
-
-{% if target.type == 'bigquery' %}
-    {{ config(
-        partition_by={'field': 'hire_date', 'data_type': 'date', 'granularity': 'month'},
-        cluster_by=['department']
-    ) }}
-{% endif %}
 
 with enriched as (
 

@@ -153,10 +153,18 @@ def load_raw_employees(
     if not extracts:
         raise IngestionError("load_raw_employees called with no extracts.")
 
+    # Note: all columns are dtype=str (ingestion is cast-free by design).
+    # Parquet files are read into memory all at once — acceptable for the HR
+    # dataset scale (<1 M rows).  For larger volumes, prefer DuckDB's native
+    # read_parquet() or a streaming merge approach.
     combined = pd.concat(
         [pd.read_parquet(extract.parquet_path) for extract in extracts], ignore_index=True
     )
     rows_before = len(combined)
+    # Parse updated_at to datetime before sorting so that deduplication uses
+    # correct chronological order regardless of the string format a regional
+    # HRIS may use (e.g. "2026-5-1 9:00:00" vs "2026-05-01 09:00:00").
+    combined["updated_at"] = pd.to_datetime(combined["updated_at"])
     combined = (
         combined.sort_values("updated_at")
         .drop_duplicates(subset="employee_id", keep="last")

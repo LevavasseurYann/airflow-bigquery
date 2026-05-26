@@ -8,8 +8,6 @@ hold — together they form the platform's data quality SLO.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
-
 from hr_pipeline.quality.checks import QualityCheck, Severity
 
 FCT_ACTIVE = "fct_employees_active"
@@ -20,20 +18,17 @@ FCT_HEADCOUNT = "fct_employee_headcount_monthly"
 def build_marts_quality_suite(
     *,
     marts_schema: str = "marts",
-    freshness_threshold: datetime | None = None,
     freshness_max_age_hours: int = 24,
 ) -> list[QualityCheck]:
     """Return the ordered list of quality checks for the HR marts.
 
     Args:
         marts_schema: schema (DuckDB) / dataset (BigQuery) holding the marts.
-        freshness_threshold: marts loaded before this instant are considered
-            stale. Defaults to ``now - freshness_max_age_hours``.
-        freshness_max_age_hours: age used to derive the default threshold.
+        freshness_max_age_hours: marts older than this many hours are considered
+            stale. The freshness check embeds ``CURRENT_TIMESTAMP`` in its SQL
+            so the threshold is always evaluated at query-execution time, not at
+            suite-construction time.
     """
-    threshold = freshness_threshold or datetime.now(UTC) - timedelta(hours=freshness_max_age_hours)
-    stale_literal = threshold.strftime("%Y-%m-%d %H:%M:%S")
-
     fct = f"{marts_schema}.{FCT_ACTIVE}"
     dim = f"{marts_schema}.{DIM_DEPARTMENTS}"
     headcount = f"{marts_schema}.{FCT_HEADCOUNT}"
@@ -113,12 +108,16 @@ def build_marts_quality_suite(
                 f"The marts must have been rebuilt within the last {freshness_max_age_hours}h."
             ),
             sql=(
+                # CURRENT_TIMESTAMP is evaluated at query-execution time, not at
+                # suite-construction time.  INTERVAL syntax is portable across
+                # DuckDB and BigQuery.  CAST normalises DuckDB's timestamptz vs
+                # BigQuery's TIMESTAMP type.
                 f"SELECT count(*) FROM ("
                 f"  SELECT max(dbt_loaded_at) AS last_loaded_at FROM {fct}"
                 f") latest"
                 f"  WHERE last_loaded_at IS NULL"
-                # Cast normalises DuckDB's timestamptz vs BigQuery's timestamp.
-                f"  OR CAST(last_loaded_at AS TIMESTAMP) < TIMESTAMP '{stale_literal}'"
+                f"  OR CAST(last_loaded_at AS TIMESTAMP)"
+                f"   < CURRENT_TIMESTAMP - INTERVAL '{freshness_max_age_hours}' HOUR"
             ),
             severity=Severity.WARN,
         ),

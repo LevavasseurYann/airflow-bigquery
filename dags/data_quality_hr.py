@@ -18,8 +18,8 @@ Airflow 3 features on display:
 from __future__ import annotations
 
 import logging
+import os
 
-import pandas as pd
 from airflow.sdk import dag, get_current_context, task
 
 from common import DEFAULT_ARGS, DEFAULT_START_DATE
@@ -32,9 +32,15 @@ from hr_pipeline.warehouse import get_warehouse
 
 logger = logging.getLogger(__name__)
 
-# Built once at parse time. The marts schema follows the active environment.
-_settings = Settings.from_env()
-_QUALITY_SUITE = build_marts_quality_suite(marts_schema=_settings.marts_schema)
+# The suite is constructed once at parse time (its SQL is static — no
+# time-sensitive values are baked in). The freshness check uses
+# CURRENT_TIMESTAMP inside its SQL, so it is always evaluated relative to when
+# the check task actually executes.
+# os.getenv() is safe at parse time; Settings.from_env() is not needed here
+# because marts_schema has no other parse-time dependencies.
+_QUALITY_SUITE = build_marts_quality_suite(
+    marts_schema=os.getenv("BQ_DATASET_MARTS", "marts"),
+)
 
 _DOC = """
 ### `data_quality_hr`
@@ -85,6 +91,8 @@ def data_quality_hr() -> None:
     @task(trigger_rule="all_done")
     def publish_quality_report() -> dict[str, object]:
         """Aggregate every check into one report and persist it to the warehouse."""
+        import pandas as pd  # deferred — DAG files are parsed frequently
+
         context = get_current_context()
         task_instance = context["ti"]
         suite_lookup = {check.name: check for check in _QUALITY_SUITE}
