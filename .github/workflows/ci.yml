@@ -109,6 +109,7 @@ jobs:
             --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-3.1.0/constraints-3.12.txt"
       - name: Install Cosmos + the hr_pipeline package
         run: |
+          pip install "dbt-core>=1.9,<2.0" "dbt-duckdb>=1.9,<2.0"
           pip install "astronomer-cosmos[dbt-duckdb]>=1.8,<2.0"
           pip install -e .
       - name: Parse and validate the DAG bag
