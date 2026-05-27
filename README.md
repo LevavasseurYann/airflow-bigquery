@@ -9,8 +9,8 @@ and enforce **data quality** — the modern data stack, end to end.
 > scheduling, a tested Python codebase, CI, and documentation a team can
 > actually onboard from.
 
-![Airflow](https://img.shields.io/badge/Apache%20Airflow-3.1-017CEE)
-![dbt](https://img.shields.io/badge/dbt-1.9%2B-FF694B)
+![Airflow](https://img.shields.io/badge/Apache%20Airflow-3.2.1-017CEE)
+![dbt](https://img.shields.io/badge/dbt-1.11%2B-FF694B)
 ![DuckDB](https://img.shields.io/badge/DuckDB-local-FFF000)
 ![BigQuery](https://img.shields.io/badge/Google%20BigQuery-production-4285F4)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB)
@@ -148,7 +148,7 @@ airflow-bigquery/
 
 ## Tech stack
 
-`Apache Airflow 3.1` · `astronomer-cosmos` · `dbt-core 1.9+` · `DuckDB` (local) ·
+`Apache Airflow 3.2.1` · `astronomer-cosmos 1.14+` · `dbt-core 1.11+` · `DuckDB` (local) ·
 `Google BigQuery` (production) · `Python 3.12` · `Docker Compose` ·
 `pytest` · `ruff` · `GitHub Actions`
 
