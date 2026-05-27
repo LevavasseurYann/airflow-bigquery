@@ -89,6 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HR_ENV: local
+      AIRFLOW_HOME: /tmp/airflow_ci
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -112,5 +113,9 @@ jobs:
           pip install "dbt-core>=1.11,<2.0" "dbt-duckdb>=1.10,<2.0"
           pip install "astronomer-cosmos[dbt-duckdb]>=1.14,<2.0"
           pip install -e ".[dev]"
+      - name: Initialise Airflow metadata database
+        run: |
+          mkdir -p $AIRFLOW_HOME
+          airflow db migrate
       - name: Parse and validate the DAG bag
         run: pytest -m dags -v
