@@ -222,3 +222,22 @@ def my_task() -> None:
 ### Nouveau check qualité
 Ajouter dans `src/hr_pipeline/quality/checks.py`, référencer dans `suite.py`.
 Le `DataQualityCheckOperator` prend une liste de checks — ne pas dupliquer la logique dans le DAG.
+
+---
+
+## Contexte à charger selon la tâche
+
+> Avant d'attaquer une tâche, lire les sources listées ici. Ne pas tout charger — charger uniquement ce qui est pertinent.
+
+| Tâche | Lire en priorité |
+|---|---|
+| Modifier un DAG (scheduling, assets) | `docs/adr/0002-airflow-3-and-asset-driven-scheduling.md` + `dags/common.py` + le DAG concerné |
+| Intégration dbt / Cosmos | `docs/adr/0003-cosmos-for-dbt-orchestration.md` + `dags/transform_hr_dbt.py` |
+| Ajouter/modifier un check qualité | `docs/deep-dive/quality-engine.md` + `src/hr_pipeline/quality/checks.py` + `src/hr_pipeline/quality/suite.py` |
+| Modifier le warehouse (DuckDB/BQ) | `docs/adr/0004-duckdb-local-bigquery-production.md` + `src/hr_pipeline/warehouse.py` |
+| Modifier la configuration (Settings) | `docs/adr/0007-dag-parse-time-vs-run-time-configuration.md` + `src/hr_pipeline/config.py` |
+| Modifier la CI | `.github/workflows/ci.yml` + `pyproject.toml` |
+| Écrire des tests | `tests/` (test existant similaire) + `src/hr_pipeline/<module>.py` cible |
+| Toucher la validation SQL | `docs/adr/0006-sql-identifier-validation.md` |
+
+**Règle** : si la tâche touche une décision déjà dans les ADRs, lire l'ADR avant d'agir.
