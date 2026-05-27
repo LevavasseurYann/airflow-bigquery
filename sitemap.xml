@@ -2,126 +2,126 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/architecture/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/contributing/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/dags/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/data-quality/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/learning-guide/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/local-development/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/production-gcp/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/adr/0001-record-architecture-decisions/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/adr/0002-airflow-3-and-asset-driven-scheduling/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/adr/0003-cosmos-for-dbt-orchestration/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/adr/0004-duckdb-local-bigquery-production/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/adr/0005-celery-executor/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/adr/0006-sql-identifier-validation/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/adr/0007-dag-parse-time-vs-run-time-configuration/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/api/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/api/config/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/api/ingestion/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/api/operators/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/api/quality-checks/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/api/quality-suite/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/api/warehouse/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/assets/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/config/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/dag-ingest/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/dag-quality/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/dag-transform/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/ingestion/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/operator/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/quality-engine/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
     <url>
          <loc>https://levavasseuryann.github.io/airflow-bigquery/deep-dive/warehouse/</loc>
-         <lastmod>2026-05-26</lastmod>
+         <lastmod>2026-05-27</lastmod>
     </url>
 </urlset>
