@@ -6,6 +6,9 @@
 #   unit-tests      — fast, hermetic pytest of the hr_pipeline package
 #   dbt-build       — runs the embedded dbt project end to end on DuckDB
 #   dag-validation  — parses every DAG through a DagBag (Airflow + Cosmos)
+#
+# Package management: uv (lock-file based for lint + unit-tests; uv pip for
+# the heavier jobs that install Airflow/dbt outside of pyproject.toml).
 # ============================================================================
 name: CI
 
@@ -28,16 +31,15 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: actions/cache@v5
+      - uses: astral-sh/setup-uv@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-lint-${{ hashFiles('pyproject.toml') }}
-          restore-keys: ${{ runner.os }}-pip-lint-
-      - run: pip install ruff==0.8.4
+          enable-cache: true
+      - name: Install dev dependencies (lock file)
+        run: uv sync --extra dev
       - name: ruff check
-        run: ruff check src dags tests scripts
+        run: uv run ruff check src dags tests scripts
       - name: ruff format --check
-        run: ruff format --check src dags tests scripts
+        run: uv run ruff format --check src dags tests scripts
 
   unit-tests:
     name: Unit tests (pytest)
@@ -47,15 +49,13 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: actions/cache@v5
+      - uses: astral-sh/setup-uv@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-unit-${{ hashFiles('pyproject.toml') }}
-          restore-keys: ${{ runner.os }}-pip-unit-
-      - name: Install hr_pipeline with dev extras
-        run: pip install -e ".[dev]"
+          enable-cache: true
+      - name: Install hr_pipeline with dev extras (lock file)
+        run: uv sync --extra dev
       - name: Run the unit suite (Airflow-free)
-        run: pytest -m "not dags" --cov=hr_pipeline --cov-report=term-missing
+        run: uv run pytest -m "not dags" --cov=hr_pipeline --cov-report=term-missing
 
   dbt-build:
     name: dbt build (DuckDB)
@@ -70,13 +70,11 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: actions/cache@v5
+      - uses: astral-sh/setup-uv@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-dbt-${{ hashFiles('pyproject.toml') }}
-          restore-keys: ${{ runner.os }}-pip-dbt-
+          enable-cache: true
       - name: Install hr_pipeline + dbt
-        run: pip install -e . "dbt-core>=1.11,<2.0" "dbt-duckdb>=1.10,<2.0"
+        run: uv pip install --system -e . "dbt-core>=1.11,<2.0" "dbt-duckdb>=1.10,<2.0"
       - name: Seed raw_hr.employees (runs the real ingestion logic)
         run: python scripts/seed_local_warehouse.py
       - name: dbt build — run + test every model, seed, snapshot
@@ -95,24 +93,20 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      # Airflow 3.2 + Cosmos is the heaviest install (~500 MB). Cache it
-      # keyed on the Airflow version so a version bump busts the cache.
-      - uses: actions/cache@v5
+      # uv cache is keyed on uv.lock + platform — busts automatically on any
+      # dependency change. Airflow 3.2 + Cosmos is ~500 MB; caching is critical.
+      - uses: astral-sh/setup-uv@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-airflow-3.2.1-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-airflow-3.2.1-
-            ${{ runner.os }}-pip-airflow-
+          enable-cache: true
       - name: Install Apache Airflow 3.2 (with the official constraints)
         run: |
-          pip install "apache-airflow==3.2.1" \
+          uv pip install --system "apache-airflow==3.2.1" \
             --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-3.2.1/constraints-3.12.txt"
       - name: Install Cosmos + the hr_pipeline package
         run: |
-          pip install "dbt-core>=1.11,<2.0" "dbt-duckdb>=1.10,<2.0"
-          pip install "astronomer-cosmos[dbt-duckdb]>=1.14,<2.0"
-          pip install -e ".[dev]"
+          uv pip install --system "dbt-core>=1.11,<2.0" "dbt-duckdb>=1.10,<2.0"
+          uv pip install --system "astronomer-cosmos[dbt-duckdb]>=1.14,<2.0"
+          uv pip install --system -e ".[dev]"
       - name: Initialise Airflow metadata database
         run: |
           mkdir -p $AIRFLOW_HOME
