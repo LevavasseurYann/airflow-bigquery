@@ -7,16 +7,16 @@
 # ============================================================================
 
 # ─── Airflow providers ──────────────────────────────────────────────────────
-apache-airflow-providers-google>=12.0.0       # BigQuery / GCS hooks & operators
-apache-airflow-providers-fab>=2.0.0           # FAB auth manager (web UI login)
-apache-airflow-providers-celery>=3.10.0       # CeleryExecutor backend
+apache-airflow-providers-google>=22.0.0       # BigQuery / GCS hooks & operators
+apache-airflow-providers-fab>=3.6.4           # FAB auth manager (web UI login)
+apache-airflow-providers-celery>=3.20.0       # CeleryExecutor backend
 
 # ─── dbt orchestration ──────────────────────────────────────────────────────
 # Cosmos renders the embedded dbt project as a native Airflow task graph.
 # The [dbt-duckdb] extra co-installs dbt-core + the DuckDB adapter so that
 # Cosmos can run dbt in LOCAL execution mode (see docs/adr/0003-*).
-astronomer-cosmos[dbt-duckdb]>=1.14.0,<2.0.0
-dbt-bigquery>=1.11.0,<2.0.0                   # production warehouse adapter
+astronomer-cosmos[dbt-duckdb]>=1.14.2,<2.0.0
+dbt-bigquery>=1.11.1,<2.0.0                   # production warehouse adapter
 
 # ─── Warehouse & data handling (used by the hr_pipeline package) ────────────
 duckdb>=1.5.0
